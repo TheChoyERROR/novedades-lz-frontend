@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth';
 import { Product, ProductCreateRequest } from '@/types';
 import { productService } from '@/services/product.service';
-import { Button, Card, CardContent, Input, Modal, Spinner, Badge } from '@/components/ui';
+import { Button, Card, CardContent, Input, Modal, Spinner, Badge, ImageUpload } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
@@ -14,13 +14,13 @@ function AdminProductsContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<ProductCreateRequest>({
     name: '',
     description: '',
     price: 0,
     stock: 0,
     category: '',
-    imageUrl: '',
   });
 
   const fetchProducts = async () => {
@@ -41,26 +41,26 @@ function AdminProductsContent() {
 
   const openCreateModal = () => {
     setEditingProduct(null);
+    setImageFile(null);
     setFormData({
       name: '',
       description: '',
       price: 0,
       stock: 0,
       category: '',
-      imageUrl: '',
     });
     setIsModalOpen(true);
   };
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+    setImageFile(null);
     setFormData({
       name: product.name,
       description: product.description,
       price: product.price,
       stock: product.stock,
       category: product.category,
-      imageUrl: product.imageUrl || '',
     });
     setIsModalOpen(true);
   };
@@ -79,17 +79,20 @@ function AdminProductsContent() {
 
     try {
       if (editingProduct) {
-        await productService.updateProduct(editingProduct.id, formData);
-        toast.success('Producto actualizado');
+        // Update product with optional new image
+        await productService.updateProduct(editingProduct.id, formData, imageFile || undefined);
+        toast.success('Producto actualizado exitosamente');
       } else {
-        await productService.createProduct(formData);
-        toast.success('Producto creado');
+        // Create product with optional image
+        await productService.createProduct(formData, imageFile || undefined);
+        toast.success('Producto creado exitosamente');
       }
       setIsModalOpen(false);
+      setImageFile(null);
       fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error('Error al guardar producto');
+      toast.error('Error al guardar producto. Verifica los datos.');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +155,21 @@ function AdminProductsContent() {
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg" />
+                        <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-gray-400">
+                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {product.name}
@@ -253,13 +270,16 @@ function AdminProductsContent() {
             onChange={handleChange}
             required
           />
-          <Input
-            label="URL de Imagen"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            placeholder="https://ejemplo.com/imagen.jpg"
+
+          {/* Image Upload with Cloudinary */}
+          <ImageUpload
+            value={imageFile}
+            onChange={setImageFile}
+            currentImageUrl={editingProduct?.imageUrl}
+            label="Imagen del Producto"
+            helperText="(Opcional - Se subirá a Cloudinary)"
           />
+
           <div className="flex justify-end gap-4 pt-4">
             <Button
               type="button"

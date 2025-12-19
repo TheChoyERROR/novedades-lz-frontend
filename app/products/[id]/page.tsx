@@ -31,13 +31,18 @@ export default function ProductDetailPage() {
 
         // Fetch related products from same category
         if (productData.category) {
-          const related = await productService.getProductsByCategory(
-            productData.category,
-            { page: 0, size: 4 }
-          );
-          setRelatedProducts(
-            related.content.filter((p: Product) => p.id !== productId).slice(0, 4)
-          );
+          try {
+            const related = await productService.getProductsByCategory(
+              encodeURIComponent(productData.category),
+              { page: 0, size: 4 }
+            );
+            setRelatedProducts(
+              related.content.filter((p: Product) => p.id !== productId).slice(0, 4)
+            );
+          } catch (relatedError) {
+            // console.warn('Failed to load related products:', relatedError);
+            // Don't fail the whole page if related products fail
+          }
         }
       } catch (error) {
         console.error('Error fetching product:', error);

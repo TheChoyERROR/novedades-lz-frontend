@@ -71,7 +71,7 @@ export interface ProductCreateRequest {
   price: number;
   stock: number;
   category: string;
-  imageUrl?: string;
+  // imageUrl removed - now handled via multipart/form-data with File upload
 }
 
 export interface ProductUpdateRequest {
@@ -80,7 +80,7 @@ export interface ProductUpdateRequest {
   price?: number;
   stock?: number;
   category?: string;
-  imageUrl?: string;
+  // imageUrl removed - now handled via multipart/form-data with File upload
 }
 
 // ==================== ORDER TYPES ====================

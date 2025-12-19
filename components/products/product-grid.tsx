@@ -11,15 +11,18 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, isLoading, emptyMessage = 'No hay productos disponibles' }: ProductGridProps) {
-  if (isLoading) {
+  if (isLoading && (!products || products.length === 0)) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Spinner size="lg" />
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="lg" />
+          <p className="text-gray-500 animate-pulse text-sm">Cargando productos...</p>
+        </div>
       </div>
     );
   }
 
-  if (!products || products.length === 0) {
+  if (!products || (products.length === 0 && !isLoading)) {
     return (
       <div className="text-center py-12">
         <svg
@@ -44,7 +47,7 @@ export function ProductGrid({ products, isLoading, emptyMessage = 'No hay produc
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input, Select, Button } from '@/components/ui';
 
 interface ProductFiltersProps {
@@ -34,10 +34,37 @@ export function ProductFilters({ categories, onFilterChange, onSearch }: Product
     direction: 'DESC',
   });
 
+  // Track previous search query to avoid initial trigger and redundant calls
+  const prevSearchQuery = useRef('');
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
   const categoryOptions = [
     { value: '', label: 'Todas las categorías' },
     ...categories.map((cat) => ({ value: cat, label: cat })),
   ];
+
+  // Effect for debounced search
+  useEffect(() => {
+    // Don't search on initial mount or if query hasn't changed (e.g. from handleSearch)
+    if (searchQuery === prevSearchQuery.current) return;
+
+    // Clear any existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set a new timer
+    debounceTimer.current = setTimeout(() => {
+      onSearch(searchQuery);
+      prevSearchQuery.current = searchQuery;
+    }, 500);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchQuery, onSearch]);
 
   const handleFilterChange = (key: keyof FilterValues, value: string) => {
     const newFilters = { ...filters, [key]: value };
@@ -47,11 +74,17 @@ export function ProductFilters({ categories, onFilterChange, onSearch }: Product
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Clear debounce timer since we're triggering manually
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    prevSearchQuery.current = searchQuery;
     onSearch(searchQuery);
   };
 
   const handleClearFilters = () => {
     setSearchQuery('');
+    prevSearchQuery.current = '';
     const defaultFilters = { category: '', sortBy: 'createdAt', direction: 'DESC' };
     setFilters(defaultFilters);
     onFilterChange(defaultFilters);

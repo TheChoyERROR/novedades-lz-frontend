@@ -75,25 +75,80 @@ class ProductService {
   }
 
   /**
-   * Create new product (ADMIN only)
+   * Create new product with image (ADMIN only)
+   * @param product - Product data without imageUrl
+   * @param imageFile - Optional image file to upload
    */
-  async createProduct(product: ProductCreateRequest): Promise<Product> {
-    const response: AxiosResponse<ApiResponse<Product>> = await apiClient.post(
-      this.BASE_URL,
-      product
-    );
-    return response.data.data;
+  async createProduct(product: ProductCreateRequest, imageFile?: File): Promise<Product> {
+    const formData = new FormData();
+
+    // Append product data as JSON blob
+    const productBlob = new Blob([JSON.stringify(product)], { type: 'application/json' });
+    formData.append('product', productBlob);
+
+    // Append image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+
+
+    try {
+      // Don't set Content-Type manually - Axios sets it automatically with boundary
+      const response: AxiosResponse<ApiResponse<Product>> = await apiClient.post(
+        this.BASE_URL,
+        formData
+      );
+      console.log('✅ Product created successfully:', response.data.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Error creating product:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+      }
+      throw error;
+    }
   }
 
   /**
-   * Update product (ADMIN only)
+   * Update product with optional new image (ADMIN only)
+   * @param id - Product ID
+   * @param product - Product data to update (without imageUrl)
+   * @param imageFile - Optional new image file to upload
    */
-  async updateProduct(id: number, product: ProductUpdateRequest): Promise<Product> {
-    const response: AxiosResponse<ApiResponse<Product>> = await apiClient.put(
-      `${this.BASE_URL}/${id}`,
-      product
-    );
-    return response.data.data;
+  async updateProduct(id: number, product: ProductUpdateRequest, imageFile?: File): Promise<Product> {
+    const formData = new FormData();
+
+    // Append product data as JSON blob
+    const productBlob = new Blob([JSON.stringify(product)], { type: 'application/json' });
+    formData.append('product', productBlob);
+
+    // Append image file if provided (replaces existing image)
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+
+
+    try {
+      // Don't set Content-Type manually - Axios sets it automatically with boundary
+      const response: AxiosResponse<ApiResponse<Product>> = await apiClient.put(
+        `${this.BASE_URL}/${id}`,
+        formData
+      );
+      console.log('✅ Product updated successfully:', response.data.data);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('❌ Error updating product:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+      }
+      throw error;
+    }
   }
 
   /**

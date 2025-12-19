@@ -16,3 +16,5 @@ export { Modal } from './modal';
 
 export { Select } from './select';
 export type { SelectProps, SelectOption } from './select';
+
+export { ImageUpload } from './image-upload';

@@ -15,10 +15,9 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         const response = await productService.getAllProducts({ page: 0, size: 8 });
-        setProducts(response?.content || []);
+        setProducts(response.content);
       } catch (error) {
         console.error('Error fetching products:', error);
-        setProducts([]);
       } finally {
         setIsLoading(false);
       }
@@ -43,9 +42,10 @@ export default function Home() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/products">
-                <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100 w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
                   Ver Productos
                 </Button>
+
               </Link>
               <Link href="/track-order">
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
