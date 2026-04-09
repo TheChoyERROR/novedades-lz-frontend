@@ -10,6 +10,7 @@ interface MultiImageUploadProps {
   value?: File[];
   onChange: (files: File[]) => void;
   currentImageUrls?: string[];
+  onCurrentImagesChange?: (urls: string[]) => void;
   error?: string;
   disabled?: boolean;
   label?: string;
@@ -22,6 +23,7 @@ export function MultiImageUpload({
   value = [],
   onChange,
   currentImageUrls = [],
+  onCurrentImagesChange,
   error,
   disabled = false,
   label = 'Fotos del Producto',
@@ -43,19 +45,22 @@ export function MultiImageUpload({
     };
   }, [value]);
 
-  const previewUrls = selectedPreviews.length > 0 ? selectedPreviews : currentImageUrls;
+  const totalImages = currentImageUrls.length + value.length;
+  const remainingSlots = maxFiles - totalImages;
   const displayError = error || validationError;
 
-  const validateFiles = (files: File[]) => {
+  const appendFiles = (files: File[]) => {
     if (files.length === 0) {
       setValidationError(null);
-      onChange([]);
       return;
     }
 
-    if (files.length > maxFiles) {
-      setValidationError(`Solo puedes subir hasta ${maxFiles} imagenes por producto`);
-      onChange([]);
+    if (files.length > remainingSlots) {
+      setValidationError(
+        remainingSlots > 0
+          ? `Solo puedes agregar ${remainingSlots} foto${remainingSlots === 1 ? '' : 's'} mas`
+          : `Ya alcanzaste el maximo de ${maxFiles} fotos`
+      );
       return;
     }
 
@@ -66,7 +71,6 @@ export function MultiImageUpload({
 
       if (!validation.isValid) {
         setValidationError(validation.error);
-        onChange([]);
         return;
       }
 
@@ -74,12 +78,15 @@ export function MultiImageUpload({
     }
 
     setValidationError(null);
-    onChange(validatedFiles);
+    onChange([...value, ...validatedFiles]);
+
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-    validateFiles(files);
+    appendFiles(Array.from(event.target.files ?? []));
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -100,17 +107,7 @@ export function MultiImageUpload({
 
     if (disabled) return;
 
-    const files = Array.from(event.dataTransfer.files ?? []);
-    validateFiles(files);
-  };
-
-  const handleRemoveSelection = () => {
-    setValidationError(null);
-    onChange([]);
-
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
+    appendFiles(Array.from(event.dataTransfer.files ?? []));
   };
 
   const handleRemoveSelectedFile = (index: number) => {
@@ -122,6 +119,15 @@ export function MultiImageUpload({
       inputRef.current.value = '';
     }
   };
+
+  const handleRemoveExistingFile = (index: number) => {
+    if (!onCurrentImagesChange) return;
+
+    setValidationError(null);
+    onCurrentImagesChange(currentImageUrls.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const hasImages = currentImageUrls.length > 0 || selectedPreviews.length > 0;
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -148,34 +154,66 @@ export function MultiImageUpload({
           multiple
           accept={IMAGE_CONSTRAINTS.ALLOWED_TYPES.join(',')}
           onChange={handleInputChange}
-          disabled={disabled}
+          disabled={disabled || remainingSlots <= 0}
           className="hidden"
         />
 
-        {previewUrls.length > 0 ? (
+        {hasImages ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {previewUrls.map((previewUrl, index) => (
-                <div key={`${previewUrl}-${index}`} className="relative overflow-hidden rounded-lg border border-gray-200 bg-white">
+              {currentImageUrls.map((previewUrl, index) => (
+                <div
+                  key={`current-${previewUrl}-${index}`}
+                  className="relative overflow-hidden rounded-lg border border-gray-200 bg-white"
+                >
                   <div className="relative aspect-square">
                     <Image
                       src={previewUrl}
-                      alt={`Preview ${index + 1}`}
+                      alt={`Actual ${index + 1}`}
                       fill
                       unoptimized
                       className="object-cover"
                     />
                   </div>
-
-                  {value.length > 0 && (
+                  {onCurrentImagesChange && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveSelectedFile(index)}
+                      onClick={() => handleRemoveExistingFile(index)}
                       className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow"
                     >
                       Quitar
                     </button>
                   )}
+                  <div className="border-t border-gray-100 px-3 py-2 text-left text-xs text-gray-500">
+                    Foto actual
+                  </div>
+                </div>
+              ))}
+
+              {selectedPreviews.map((previewUrl, index) => (
+                <div
+                  key={`new-${previewUrl}-${index}`}
+                  className="relative overflow-hidden rounded-lg border border-gray-200 bg-white"
+                >
+                  <div className="relative aspect-square">
+                    <Image
+                      src={previewUrl}
+                      alt={`Nueva ${index + 1}`}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSelectedFile(index)}
+                    className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow"
+                  >
+                    Quitar
+                  </button>
+                  <div className="border-t border-gray-100 px-3 py-2 text-left text-xs text-gray-500">
+                    Nueva foto
+                  </div>
                 </div>
               ))}
             </div>
@@ -183,7 +221,10 @@ export function MultiImageUpload({
             {value.length > 0 && (
               <div className="space-y-1 text-sm text-gray-600">
                 {value.map((file) => (
-                  <div key={`${file.name}-${file.size}`} className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2">
+                  <div
+                    key={`${file.name}-${file.size}`}
+                    className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+                  >
                     <span className="truncate pr-4">{file.name}</span>
                     <span className="text-gray-500">{formatFileSize(file.size)}</span>
                   </div>
@@ -191,28 +232,21 @@ export function MultiImageUpload({
               </div>
             )}
 
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-                disabled={disabled}
-              >
-                {value.length > 0 ? 'Cambiar Fotos' : 'Reemplazar Galeria'}
-              </Button>
-              {value.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm text-gray-500">
+                {totalImages} / {maxFiles} fotos
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={handleRemoveSelection}
-                  disabled={disabled}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={disabled || remainingSlots <= 0}
                 >
-                  Limpiar Seleccion
+                  {remainingSlots > 0 ? 'Agregar Fotos' : 'Galeria Completa'}
                 </Button>
-              )}
+              </div>
             </div>
           </div>
         ) : (

@@ -81,6 +81,7 @@ export interface ProductUpdateRequest {
   price?: number;
   stock?: number;
   category?: string;
+  imageUrls?: string[];
 }
 
 // ==================== ORDER TYPES ====================

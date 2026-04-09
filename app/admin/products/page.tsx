@@ -10,6 +10,7 @@ import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
 function AdminProductsContent() {
+  const MAX_PRODUCT_IMAGES = 3;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,6 +19,7 @@ function AdminProductsContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [formData, setFormData] = useState<ProductCreateRequest>({
     name: '',
     description: '',
@@ -45,6 +47,7 @@ function AdminProductsContent() {
   const openCreateModal = () => {
     setEditingProduct(null);
     setImageFiles([]);
+    setExistingImageUrls([]);
     setFormData({
       name: '',
       description: '',
@@ -58,6 +61,7 @@ function AdminProductsContent() {
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setImageFiles([]);
+    setExistingImageUrls(product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : []);
     setFormData({
       name: product.name,
       description: product.description,
@@ -89,7 +93,10 @@ function AdminProductsContent() {
       if (editingProduct) {
         await productService.updateProduct(
           editingProduct.id,
-          formData,
+          {
+            ...formData,
+            imageUrls: existingImageUrls,
+          },
           imageFiles.length > 0 ? imageFiles : undefined
         );
         toast.success('Producto actualizado exitosamente');
@@ -100,6 +107,7 @@ function AdminProductsContent() {
 
       setIsModalOpen(false);
       setImageFiles([]);
+      setExistingImageUrls([]);
       await fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -292,19 +300,15 @@ function AdminProductsContent() {
           <MultiImageUpload
             value={imageFiles}
             onChange={setImageFiles}
-            currentImageUrls={
-              editingProduct?.imageUrls?.length
-                ? editingProduct.imageUrls
-                : editingProduct?.imageUrl
-                  ? [editingProduct.imageUrl]
-                  : []
-            }
+            currentImageUrls={existingImageUrls}
+            onCurrentImagesChange={editingProduct ? setExistingImageUrls : undefined}
             label="Fotos del Producto"
             helperText={
               editingProduct
-                ? '(Opcional - si subes nuevas fotos, reemplazan la galeria actual)'
-                : '(Obligatorias - puedes subir hasta 3 fotos)'
+                ? '(Puedes agregar nuevas fotos o quitar individuales sin reemplazar toda la galeria)'
+                : `(Obligatorias - puedes subir hasta ${MAX_PRODUCT_IMAGES} fotos)`
             }
+            maxFiles={MAX_PRODUCT_IMAGES}
           />
 
           <div className="flex justify-end gap-4 pt-4">
