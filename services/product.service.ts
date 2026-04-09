@@ -98,14 +98,16 @@ class ProductService {
     return response.data.data;
   }
 
-  async createProduct(product: ProductCreateRequest, imageFile?: File): Promise<Product> {
-    if (!imageFile) {
-      throw new Error('Selecciona una imagen para el producto');
+  async createProduct(product: ProductCreateRequest, imageFiles?: File[]): Promise<Product> {
+    if (!imageFiles || imageFiles.length === 0) {
+      throw new Error('Selecciona al menos una imagen para el producto');
     }
 
     const formData = new FormData();
     formData.append('product', JSON.stringify(product));
-    formData.append('image', imageFile);
+    imageFiles.forEach((imageFile) => {
+      formData.append('images', imageFile);
+    });
 
     try {
       const response: AxiosResponse<ApiResponse<Product>> = await apiClient.post(
@@ -119,12 +121,14 @@ class ProductService {
     }
   }
 
-  async updateProduct(id: number, product: ProductUpdateRequest, imageFile?: File): Promise<Product> {
+  async updateProduct(id: number, product: ProductUpdateRequest, imageFiles?: File[]): Promise<Product> {
     const formData = new FormData();
     formData.append('product', JSON.stringify(product));
 
-    if (imageFile) {
-      formData.append('image', imageFile);
+    if (imageFiles && imageFiles.length > 0) {
+      imageFiles.forEach((imageFile) => {
+        formData.append('images', imageFile);
+      });
     }
 
     try {

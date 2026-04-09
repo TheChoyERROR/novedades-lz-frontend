@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth';
 import { Product, ProductCreateRequest } from '@/types';
 import { productService } from '@/services/product.service';
-import { Badge, Button, Card, CardContent, ImageUpload, Input, Modal, Spinner } from '@/components/ui';
+import { Badge, Button, Card, CardContent, Input, Modal, MultiImageUpload, Spinner } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
@@ -17,7 +17,7 @@ function AdminProductsContent() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState<ProductCreateRequest>({
     name: '',
     description: '',
@@ -44,7 +44,7 @@ function AdminProductsContent() {
 
   const openCreateModal = () => {
     setEditingProduct(null);
-    setImageFile(null);
+    setImageFiles([]);
     setFormData({
       name: '',
       description: '',
@@ -57,7 +57,7 @@ function AdminProductsContent() {
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
-    setImageFile(null);
+    setImageFiles([]);
     setFormData({
       name: product.name,
       description: product.description,
@@ -81,21 +81,25 @@ function AdminProductsContent() {
     setIsSubmitting(true);
 
     try {
-      if (!editingProduct && !imageFile) {
-        toast.error('Selecciona una imagen para crear el producto');
+      if (!editingProduct && imageFiles.length === 0) {
+        toast.error('Selecciona al menos una foto para crear el producto');
         return;
       }
 
       if (editingProduct) {
-        await productService.updateProduct(editingProduct.id, formData, imageFile || undefined);
+        await productService.updateProduct(
+          editingProduct.id,
+          formData,
+          imageFiles.length > 0 ? imageFiles : undefined
+        );
         toast.success('Producto actualizado exitosamente');
       } else {
-        await productService.createProduct(formData, imageFile || undefined);
+        await productService.createProduct(formData, imageFiles);
         toast.success('Producto creado exitosamente');
       }
 
       setIsModalOpen(false);
-      setImageFile(null);
+      setImageFiles([]);
       await fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -187,12 +191,15 @@ function AdminProductsContent() {
                             </div>
                           )}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {product.description}
-                          </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                          {product.description}
                         </div>
+                        <div className="text-xs text-gray-400">
+                          {product.imageUrls?.length || (product.imageUrl ? 1 : 0)} fotos
+                        </div>
+                      </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -282,15 +289,21 @@ function AdminProductsContent() {
             required
           />
 
-          <ImageUpload
-            value={imageFile}
-            onChange={setImageFile}
-            currentImageUrl={editingProduct?.imageUrl}
-            label="Imagen del Producto"
+          <MultiImageUpload
+            value={imageFiles}
+            onChange={setImageFiles}
+            currentImageUrls={
+              editingProduct?.imageUrls?.length
+                ? editingProduct.imageUrls
+                : editingProduct?.imageUrl
+                  ? [editingProduct.imageUrl]
+                  : []
+            }
+            label="Fotos del Producto"
             helperText={
               editingProduct
-                ? '(Opcional - mantiene la imagen actual si no la cambias)'
-                : '(Obligatoria - se subira al backend local o a Cloudinary segun la configuracion)'
+                ? '(Opcional - si subes nuevas fotos, reemplazan la galeria actual)'
+                : '(Obligatorias - puedes subir hasta 3 fotos)'
             }
           />
 

@@ -60,6 +60,7 @@ export interface Product {
   stock: number;
   category: string;
   imageUrl: string | null;
+  imageUrls: string[];
   active: boolean;
   lowStock: boolean;
   createdAt: string | null;

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Product } from '@/types';
 import { Button, Badge } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
@@ -14,10 +14,22 @@ interface ProductDetailProps {
 
 export function ProductDetail({ product }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState<string | null>(
+    product.imageUrls?.[0] ?? product.imageUrl ?? null
+  );
   const { addItem, getItem } = useCartStore();
   const cartItem = getItem(product.id);
   const isOutOfStock = product.stock === 0;
   const maxQuantity = product.stock - (cartItem?.quantity || 0);
+  const productImages = product.imageUrls?.length
+    ? product.imageUrls
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
+
+  useEffect(() => {
+    setSelectedImage(product.imageUrls?.[0] ?? product.imageUrl ?? null);
+  }, [product.id, product.imageUrl, product.imageUrls]);
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -46,38 +58,64 @@ export function ProductDetail({ product }: ProductDetailProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Product Image */}
-      <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <svg
-              className="h-32 w-32 text-gray-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-        )}
+      <div className="space-y-4">
+        <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
+          {selectedImage ? (
+            <Image
+              src={selectedImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="h-32 w-32 text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          )}
 
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-xl">
-              Agotado
-            </span>
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-xl">
+                Agotado
+              </span>
+            </div>
+          )}
+        </div>
+
+        {productImages.length > 1 && (
+          <div className="grid grid-cols-4 gap-3">
+            {productImages.map((imageUrl, index) => (
+              <button
+                key={`${imageUrl}-${index}`}
+                type="button"
+                onClick={() => setSelectedImage(imageUrl)}
+                className={`relative aspect-square overflow-hidden rounded-lg border-2 transition ${
+                  selectedImage === imageUrl
+                    ? 'border-indigo-500 ring-2 ring-indigo-200'
+                    : 'border-gray-200 hover:border-indigo-300'
+                }`}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={`${product.name} ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
           </div>
         )}
       </div>
