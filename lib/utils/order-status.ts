@@ -31,3 +31,7 @@ export function canUploadYapeProof(order: Pick<Order, 'paymentMethod' | 'status'
 export function isPaymentReviewStatus(status: OrderStatus): boolean {
   return status === OrderStatus.PAYMENT_REVIEW;
 }
+
+export function isRevenueStatus(status: OrderStatus): boolean {
+  return status === OrderStatus.CONFIRMED || status === OrderStatus.DELIVERED;
+}

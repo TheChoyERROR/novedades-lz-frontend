@@ -10,15 +10,20 @@ import toast from 'react-hot-toast';
 interface PaymentProofCardProps {
   order: Order;
   onOrderUpdated?: (order: Order) => void;
+  allowUpload?: boolean;
 }
 
 const yapeRecipientPhone = process.env.NEXT_PUBLIC_YAPE_RECIPIENT_PHONE || '+51 939 662 630';
 
-export function PaymentProofCard({ order, onOrderUpdated }: PaymentProofCardProps) {
+export function PaymentProofCard({
+  order,
+  onOrderUpdated,
+  allowUpload = true,
+}: PaymentProofCardProps) {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const canUpload = canUploadYapeProof(order);
+  const canUpload = allowUpload && canUploadYapeProof(order);
   const status = orderStatusConfig[order.status];
   const notes = useMemo(
     () => order.notes?.split('\n').filter(Boolean) ?? [],
@@ -57,7 +62,9 @@ export function PaymentProofCard({ order, onOrderUpdated }: PaymentProofCardProp
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Pago por Yape</h2>
             <p className="text-sm text-gray-500">
-              Yapea a {yapeRecipientPhone} y sube aqui la captura del comprobante.
+              {allowUpload
+                ? `Yapea a ${yapeRecipientPhone} y sube aqui la captura del comprobante.`
+                : 'Consulta aqui el comprobante y el historial de revision del pago.'}
             </p>
           </div>
           <Badge variant={status.variant}>{status.label}</Badge>
@@ -109,7 +116,16 @@ export function PaymentProofCard({ order, onOrderUpdated }: PaymentProofCardProp
 
         {order.status === OrderStatus.PAYMENT_REJECTED && (
           <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800">
-            Tu pago fue observado. Puedes subir una nueva captura mas clara o corregida.
+            {allowUpload
+              ? 'Tu pago fue observado. Puedes subir una nueva captura mas clara o corregida.'
+              : 'Tu pago fue observado. Por seguridad, la carga de comprobantes no esta disponible desde rastreo de pedido.'}
+          </div>
+        )}
+
+        {!allowUpload && !order.paymentProof && (
+          <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+            Por seguridad, la carga de comprobantes no esta disponible desde esta vista publica.
+            Si necesitas enviar o corregir uno, hazlo desde la pagina de confirmacion del pedido o contactanos por WhatsApp.
           </div>
         )}
 

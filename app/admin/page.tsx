@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, Spinner } from '@/components/ui';
 import { productService } from '@/services/product.service';
 import { orderService } from '@/services/order.service';
 import { formatPrice } from '@/lib/utils/format';
+import { isRevenueStatus } from '@/lib/utils/order-status';
 
 interface DashboardStats {
   totalProducts: number;
@@ -32,7 +33,7 @@ function AdminDashboardContent() {
         ).length;
 
         const totalRevenue = ordersRes.content
-          .filter((order) => order.status !== 'CANCELLED')
+          .filter((order) => isRevenueStatus(order.status))
           .reduce((sum, order) => sum + order.total, 0);
 
         setStats({

@@ -30,7 +30,7 @@ export function OrderDetail({ order, onOrderUpdated }: OrderDetailProps) {
         </CardHeader>
       </Card>
 
-      <PaymentProofCard order={order} onOrderUpdated={onOrderUpdated} />
+      <PaymentProofCard order={order} onOrderUpdated={onOrderUpdated} allowUpload={false} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
