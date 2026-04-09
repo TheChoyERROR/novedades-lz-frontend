@@ -1,6 +1,12 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:8080/api' : '');
+
+if (!API_BASE_URL && process.env.NODE_ENV !== 'development') {
+  console.error('Missing NEXT_PUBLIC_API_BASE_URL for production frontend build');
+}
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
