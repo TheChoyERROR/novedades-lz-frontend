@@ -1,12 +1,14 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { useCartStore } from '@/stores/cart-store';
-import { Button } from '@/components/ui';
-import { cn } from '@/lib/utils/cn';
 import { useState } from 'react';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { Button } from '@/components/ui';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { cn } from '@/lib/utils/cn';
+import { useCartStore } from '@/stores/cart-store';
 
 export function Header() {
   const pathname = usePathname();
@@ -29,19 +31,33 @@ export function Header() {
   const isAdmin = user?.role === 'ADMIN';
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-30">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          {/* Logo */}
+    <header className="sticky top-0 z-30 border-b border-border bg-[var(--header-background)] backdrop-blur-xl shadow-[0_16px_40px_rgba(89,11,49,0.08)]">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-[72px] items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-indigo-600">
-                Novedades LZ
-              </span>
+            <Link href="/" className="flex flex-shrink-0 items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-primary-200/50 blur-md" />
+                <Image
+                  src="/brand/logo.png"
+                  alt="Logo de Novedades LZ"
+                  width={52}
+                  height={52}
+                  className="relative h-[52px] w-[52px] object-contain"
+                  priority
+                />
+              </div>
+              <div className="hidden sm:flex flex-col leading-none">
+                <span className="text-lg font-bold text-primary-700 dark:text-primary-800">
+                  Novedades LZ
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary-500">
+                  De todo para todos
+                </span>
+              </div>
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-8">
             {navigation.map((item) => (
               <Link
@@ -50,15 +66,15 @@ export function Header() {
                 className={cn(
                   'text-sm font-medium transition-colors',
                   pathname === item.href
-                    ? 'text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'text-primary-600'
+                    : 'text-muted-foreground hover:text-primary-600'
                 )}
               >
                 {item.name === 'Carrito' ? (
                   <span className="relative">
                     {item.name}
                     {totalItems > 0 && (
-                      <span className="absolute -top-2 -right-4 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -right-4 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
                         {totalItems}
                       </span>
                     )}
@@ -77,8 +93,8 @@ export function Header() {
                   className={cn(
                     'text-sm font-medium transition-colors',
                     pathname.startsWith(item.href)
-                      ? 'text-indigo-600'
-                      : 'text-gray-700 hover:text-indigo-600'
+                      ? 'text-primary-600'
+                      : 'text-muted-foreground hover:text-primary-600'
                   )}
                 >
                   {item.name}
@@ -86,22 +102,22 @@ export function Header() {
               ))}
           </div>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
+          <div className="hidden md:flex md:items-center md:space-x-3">
+            <ThemeToggle />
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-muted-foreground">
                   Hola, {user?.fullName?.split(' ')[0]}
                 </span>
                 <Button variant="outline" size="sm" onClick={logout}>
-                  Cerrar Sesión
+                  Cerrar sesion
                 </Button>
               </>
             ) : (
               <>
                 <Link href="/login">
                   <Button variant="ghost" size="sm">
-                    Iniciar Sesión
+                    Iniciar sesion
                   </Button>
                 </Link>
                 <Link href="/register">
@@ -111,14 +127,16 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
             <button
+              type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-700 hover:text-indigo-600"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-600"
+              aria-label={isMobileMenuOpen ? 'Cerrar menu' : 'Abrir menu'}
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -143,9 +161,8 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
+          <div className="border-t border-border py-4 md:hidden">
             <div className="flex flex-col space-y-4">
               {navigation.map((item) => (
                 <Link
@@ -153,9 +170,7 @@ export function Header() {
                   href={item.href}
                   className={cn(
                     'text-sm font-medium transition-colors',
-                    pathname === item.href
-                      ? 'text-indigo-600'
-                      : 'text-gray-700'
+                    pathname === item.href ? 'text-primary-600' : 'text-muted-foreground'
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -173,8 +188,8 @@ export function Header() {
                     className={cn(
                       'text-sm font-medium transition-colors',
                       pathname.startsWith(item.href)
-                        ? 'text-indigo-600'
-                        : 'text-gray-700'
+                        ? 'text-primary-600'
+                        : 'text-muted-foreground'
                     )}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -182,10 +197,13 @@ export function Header() {
                   </Link>
                 ))}
 
-              <div className="pt-4 border-t border-gray-100">
+              <div className="border-t border-border pt-4">
+                <div className="mb-3">
+                  <ThemeToggle showLabel className="w-full justify-between" />
+                </div>
                 {isAuthenticated ? (
                   <div className="flex flex-col space-y-2">
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-muted-foreground">
                       Hola, {user?.fullName?.split(' ')[0]}
                     </span>
                     <Button
@@ -196,14 +214,14 @@ export function Header() {
                         setIsMobileMenuOpen(false);
                       }}
                     >
-                      Cerrar Sesión
+                      Cerrar sesion
                     </Button>
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="ghost" size="sm" className="w-full">
-                        Iniciar Sesión
+                        Iniciar sesion
                       </Button>
                     </Link>
                     <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>

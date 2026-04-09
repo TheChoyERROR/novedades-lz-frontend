@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IMAGE_CONSTRAINTS, formatFileSize, validateImageFile } from '@/lib/utils/image-validation';
 import { Button } from './button';
 import { cn } from '@/lib/utils/cn';
@@ -32,18 +32,18 @@ export function MultiImageUpload({
   className,
 }: MultiImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [selectedPreviews, setSelectedPreviews] = useState<string[]>([]);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const selectedPreviews = useMemo(
+    () => value.map((file) => URL.createObjectURL(file)),
+    [value]
+  );
 
   useEffect(() => {
-    const previews = value.map((file) => URL.createObjectURL(file));
-    setSelectedPreviews(previews);
-
     return () => {
-      previews.forEach((preview) => URL.revokeObjectURL(preview));
+      selectedPreviews.forEach((preview) => URL.revokeObjectURL(preview));
     };
-  }, [value]);
+  }, [selectedPreviews]);
 
   const totalImages = currentImageUrls.length + value.length;
   const remainingSlots = maxFiles - totalImages;
@@ -139,8 +139,8 @@ export function MultiImageUpload({
       <div
         className={cn(
           'rounded-lg border-2 border-dashed p-6 text-center transition-colors',
-          isDragging && !disabled && 'border-indigo-500 bg-indigo-50',
-          !isDragging && !displayError && 'border-gray-300 hover:border-indigo-400',
+          isDragging && !disabled && 'border-primary-500 bg-primary-50',
+          !isDragging && !displayError && 'border-gray-300 hover:border-primary-400',
           displayError && 'border-red-300 bg-red-50',
           disabled && 'cursor-not-allowed bg-gray-50 opacity-50'
         )}

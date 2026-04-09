@@ -205,8 +205,8 @@ export function CheckoutForm() {
                 onChange={handleChange}
               />
 
-              <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
-                <p className="text-sm text-indigo-800">
+              <div className="mt-4 p-4 bg-primary-50 rounded-lg">
+                <p className="text-sm text-primary-800">
                   <strong>Nota:</strong> Despues de realizar el pedido, te contactaremos
                   por WhatsApp para confirmar el pago y coordinar el envio.
                 </p>
@@ -244,7 +244,7 @@ export function CheckoutForm() {
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-indigo-600">{formatPrice(totalAmount, 'PEN')}</span>
+                  <span className="text-primary-600">{formatPrice(totalAmount, 'PEN')}</span>
                 </div>
               </div>
             </CardContent>

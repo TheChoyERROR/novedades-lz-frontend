@@ -66,7 +66,7 @@ export function CartItem({ item }: CartItemProps) {
       {/* Product Info */}
       <div className="flex-1 min-w-0">
         <Link href={`/products/${product.id}`}>
-          <h3 className="font-semibold text-gray-900 hover:text-indigo-600 transition-colors truncate">
+          <h3 className="font-semibold text-gray-900 hover:text-primary-600 transition-colors truncate">
             {product.name}
           </h3>
         </Link>

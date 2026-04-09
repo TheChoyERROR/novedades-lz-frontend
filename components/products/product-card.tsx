@@ -36,7 +36,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="group overflow-hidden">
       {/* Product Image */}
       <Link href={`/products/${product.id}`}>
-        <div className="relative aspect-square bg-gray-100 overflow-hidden">
+        <div className="relative aspect-square overflow-hidden bg-surface-muted">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -72,7 +72,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Category Badge */}
-          <span className="absolute top-2 left-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
+          <span className="absolute left-2 top-2 rounded-full bg-primary-600 px-2 py-1 text-xs text-white shadow-sm">
             {product.category}
           </span>
         </div>
@@ -80,20 +80,20 @@ export function ProductCard({ product }: ProductCardProps) {
 
       <CardContent className="p-4">
         <Link href={`/products/${product.id}`}>
-          <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+          <h3 className="line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary-600">
             {product.name}
           </h3>
         </Link>
 
-        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
           {product.description}
         </p>
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-xl font-bold text-indigo-600">
+          <span className="text-xl font-bold text-primary-600">
             {formatPrice(product.price, 'PEN')}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Stock: {product.stock}
           </span>
         </div>

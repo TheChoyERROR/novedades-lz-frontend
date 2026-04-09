@@ -80,7 +80,7 @@ export function OrderDetail({ order, onOrderUpdated }: OrderDetailProps) {
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-3">
                   <dt className="text-lg font-semibold text-gray-900">Total</dt>
-                  <dd className="text-lg font-semibold text-indigo-600">
+                  <dd className="text-lg font-semibold text-primary-600">
                     {formatPrice(order.total, 'PEN')}
                   </dd>
                 </div>
@@ -180,11 +180,11 @@ function TimelineItem({ title, date, isCompleted, isActive, isLast }: TimelineIt
       <div className="flex flex-col items-center">
         <div
           className={`w-4 h-4 rounded-full ${
-            isCompleted ? 'bg-indigo-600' : isActive ? 'bg-indigo-300' : 'bg-gray-200'
+            isCompleted ? 'bg-primary-600' : isActive ? 'bg-primary-300' : 'bg-gray-200'
           }`}
         />
         {!isLast && (
-          <div className={`w-0.5 h-8 ${isCompleted ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+          <div className={`w-0.5 h-8 ${isCompleted ? 'bg-primary-600' : 'bg-gray-200'}`} />
         )}
       </div>
       <div className="-mt-0.5">

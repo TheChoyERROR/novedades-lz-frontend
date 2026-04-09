@@ -18,7 +18,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="mb-1 block text-sm font-medium text-foreground"
           >
             {label}
           </label>
@@ -28,22 +28,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           type={type}
           id={inputId}
           className={cn(
-            'w-full px-4 py-2 border rounded-lg transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-            'placeholder:text-gray-400',
+            'w-full rounded-lg border px-4 py-2 text-foreground transition-colors',
+            'bg-surface-elevated',
+            'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500',
+            'placeholder:text-muted-foreground',
             error
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 hover:border-gray-400',
-            'disabled:bg-gray-100 disabled:cursor-not-allowed',
+              ? 'border-danger-500 focus:ring-danger-500'
+              : 'border-border hover:border-primary-300',
+            'disabled:bg-surface-muted disabled:cursor-not-allowed',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <p className="mt-1 text-sm text-danger-500">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
         )}
       </div>
     );

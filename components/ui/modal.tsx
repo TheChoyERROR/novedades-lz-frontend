@@ -33,7 +33,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           className={cn(
-            'bg-white rounded-xl shadow-xl w-full',
+            'w-full rounded-2xl border border-border bg-surface-elevated shadow-[0_24px_64px_rgba(0,0,0,0.24)]',
             'transform transition-all',
             'max-h-[90vh] overflow-y-auto',
             sizes[size]
@@ -42,11 +42,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">{title}</h2>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-muted-foreground transition-colors hover:text-primary-600"
               >
                 <svg
                   className="h-6 w-6"

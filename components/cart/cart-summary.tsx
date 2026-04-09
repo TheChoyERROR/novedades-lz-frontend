@@ -81,7 +81,7 @@ export function CartSummary() {
             <div className="border-t border-gray-200 mt-4 pt-4">
               <div className="flex justify-between text-lg font-semibold text-gray-900">
                 <dt>Total</dt>
-                <dd className="text-indigo-600">{formatPrice(totalAmount, 'PEN')}</dd>
+                <dd className="text-primary-600">{formatPrice(totalAmount, 'PEN')}</dd>
               </div>
             </div>
           </CardContent>

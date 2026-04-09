@@ -99,13 +99,13 @@ export default function OrderConfirmationPage() {
           <div className="border-t border-gray-200 pt-4 mb-6">
             <div className="flex justify-between text-lg font-semibold">
               <span>Total</span>
-              <span className="text-indigo-600">{formatPrice(order.total, 'PEN')}</span>
+              <span className="text-primary-600">{formatPrice(order.total, 'PEN')}</span>
             </div>
           </div>
 
-          <div className="bg-indigo-50 rounded-lg p-4">
-            <h3 className="font-semibold text-indigo-900 mb-2">Proximos Pasos:</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-indigo-800">
+          <div className="bg-primary-50 rounded-lg p-4">
+            <h3 className="font-semibold text-primary-900 mb-2">Proximos Pasos:</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
               <li>Realiza el pago segun el metodo seleccionado</li>
               <li>Si elegiste Yape, sube tu captura desde esta misma pagina</li>
               <li>Revisaremos el comprobante manualmente antes de confirmar</li>

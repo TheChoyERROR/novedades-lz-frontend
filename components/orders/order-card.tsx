@@ -26,7 +26,7 @@ export function OrderCard({ order }: OrderCardProps) {
           </div>
 
           <div className="text-right">
-            <p className="text-lg font-semibold text-indigo-600">
+            <p className="text-lg font-semibold text-primary-600">
               {formatPrice(order.total, 'PEN')}
             </p>
             <p className="text-sm text-gray-500">

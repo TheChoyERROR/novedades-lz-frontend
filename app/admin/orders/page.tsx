@@ -252,7 +252,7 @@ function AdminOrdersContent() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total</p>
-                <p className="font-medium text-indigo-600">{formatPrice(selectedOrder.total, 'PEN')}</p>
+                <p className="font-medium text-primary-600">{formatPrice(selectedOrder.total, 'PEN')}</p>
               </div>
             </div>
 
@@ -298,7 +298,7 @@ function AdminOrdersContent() {
                     href={selectedOrder.paymentProof}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700"
                   >
                     Abrir comprobante en una pestana nueva
                   </a>
@@ -319,7 +319,7 @@ function AdminOrdersContent() {
                   type="text"
                   value={reviewOperationNumber}
                   onChange={(e) => setReviewOperationNumber(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Ej. 12345678"
                 />
               </div>
@@ -331,7 +331,7 @@ function AdminOrdersContent() {
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Motivo de rechazo, observaciones o comentario de aprobacion"
                 />
               </div>

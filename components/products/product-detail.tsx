@@ -1,11 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { Product } from '@/types';
-import { Button, Badge } from '@/components/ui';
+import { useState } from 'react';
+import { Badge, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
+import { Product } from '@/types';
 import toast from 'react-hot-toast';
 
 interface ProductDetailProps {
@@ -13,10 +13,9 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
+  const defaultSelectedImage = product.imageUrls?.[0] ?? product.imageUrl ?? null;
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState<string | null>(
-    product.imageUrls?.[0] ?? product.imageUrl ?? null
-  );
+  const [selectedImage, setSelectedImage] = useState<string | null>(defaultSelectedImage);
   const { addItem, getItem } = useCartStore();
   const cartItem = getItem(product.id);
   const isOutOfStock = product.stock === 0;
@@ -26,10 +25,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
     : product.imageUrl
       ? [product.imageUrl]
       : [];
-
-  useEffect(() => {
-    setSelectedImage(product.imageUrls?.[0] ?? product.imageUrl ?? null);
-  }, [product.id, product.imageUrl, product.imageUrls]);
+  const activeImage =
+    selectedImage && productImages.includes(selectedImage)
+      ? selectedImage
+      : defaultSelectedImage;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -56,13 +55,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Product Image */}
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <div className="space-y-4">
-        <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
-          {selectedImage ? (
+        <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface-muted shadow-[0_16px_36px_rgba(89,11,49,0.08)]">
+          {activeImage ? (
             <Image
-              src={selectedImage}
+              src={activeImage}
               alt={product.name}
               fill
               className="object-cover"
@@ -71,7 +69,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
-                className="h-32 w-32 text-gray-300"
+                className="h-32 w-32 text-muted-foreground"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -87,8 +85,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
           )}
 
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-xl">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <span className="rounded-lg bg-danger-500 px-6 py-3 text-xl font-semibold text-white">
                 Agotado
               </span>
             </div>
@@ -102,10 +100,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 key={`${imageUrl}-${index}`}
                 type="button"
                 onClick={() => setSelectedImage(imageUrl)}
-                className={`relative aspect-square overflow-hidden rounded-lg border-2 transition ${
-                  selectedImage === imageUrl
-                    ? 'border-indigo-500 ring-2 ring-indigo-200'
-                    : 'border-gray-200 hover:border-indigo-300'
+                className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${
+                  activeImage === imageUrl
+                    ? 'border-primary-500 ring-2 ring-primary-200'
+                    : 'border-border hover:border-primary-300'
                 }`}
               >
                 <Image
@@ -120,61 +118,60 @@ export function ProductDetail({ product }: ProductDetailProps) {
         )}
       </div>
 
-      {/* Product Info */}
       <div>
         <div className="mb-4">
           <Badge variant="info">{product.category}</Badge>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {product.name}
-        </h1>
+        <h1 className="mb-4 text-3xl font-bold text-foreground">{product.name}</h1>
 
-        <p className="text-gray-600 text-lg mb-6">
-          {product.description}
-        </p>
+        <p className="mb-6 text-lg text-muted-foreground">{product.description}</p>
 
-        <div className="flex items-center gap-4 mb-6">
-          <span className="text-3xl font-bold text-indigo-600">
+        <div className="mb-6 flex items-center gap-4">
+          <span className="text-3xl font-bold text-primary-600">
             {formatPrice(product.price, 'PEN')}
           </span>
-          <Badge variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'}>
+          <Badge
+            variant={
+              product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'
+            }
+          >
             {product.stock > 0 ? `${product.stock} en stock` : 'Sin stock'}
           </Badge>
         </div>
 
-        {/* Quantity Selector */}
         {!isOutOfStock && (
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-gray-700 font-medium">Cantidad:</span>
-            <div className="flex items-center border border-gray-300 rounded-lg">
+          <div className="mb-6 flex items-center gap-4">
+            <span className="font-medium text-foreground">Cantidad:</span>
+            <div className="flex items-center overflow-hidden rounded-lg border border-border bg-surface">
               <button
+                type="button"
                 onClick={decrementQuantity}
                 disabled={quantity <= 1}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-muted-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
               >
                 -
               </button>
-              <span className="px-4 py-2 border-x border-gray-300 min-w-[60px] text-center">
+              <span className="min-w-[60px] border-x border-border px-4 py-2 text-center">
                 {quantity}
               </span>
               <button
+                type="button"
                 onClick={incrementQuantity}
                 disabled={quantity >= maxQuantity}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-muted-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
               >
                 +
               </button>
             </div>
             {cartItem && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 ({cartItem.quantity} en carrito)
               </span>
             )}
           </div>
         )}
 
-        {/* Add to Cart Button */}
         <Button
           size="lg"
           className="w-full"
@@ -182,24 +179,27 @@ export function ProductDetail({ product }: ProductDetailProps) {
           disabled={isOutOfStock}
           onClick={handleAddToCart}
         >
-          {isOutOfStock ? 'Sin Stock' : 'Agregar al Carrito'}
+          {isOutOfStock ? 'Sin stock' : 'Agregar al carrito'}
         </Button>
 
-        {/* Additional Info */}
-        <div className="mt-8 border-t border-gray-200 pt-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Información del Producto</h3>
+        <div className="mt-8 border-t border-border pt-6">
+          <h3 className="mb-4 font-semibold text-foreground">
+            Informacion del producto
+          </h3>
           <dl className="space-y-3">
             <div className="flex justify-between">
-              <dt className="text-gray-500">SKU</dt>
-              <dd className="text-gray-900 font-medium">LZ-{product.id.toString().padStart(6, '0')}</dd>
+              <dt className="text-muted-foreground">SKU</dt>
+              <dd className="font-medium text-foreground">
+                LZ-{product.id.toString().padStart(6, '0')}
+              </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-gray-500">Categoría</dt>
-              <dd className="text-gray-900 font-medium">{product.category}</dd>
+              <dt className="text-muted-foreground">Categoria</dt>
+              <dd className="font-medium text-foreground">{product.category}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-gray-500">Disponibilidad</dt>
-              <dd className="text-gray-900 font-medium">
+              <dt className="text-muted-foreground">Disponibilidad</dt>
+              <dd className="font-medium text-foreground">
                 {product.stock > 0 ? 'En stock' : 'Agotado'}
               </dd>
             </div>

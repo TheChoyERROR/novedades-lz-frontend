@@ -99,7 +99,7 @@ export function LoginForm() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               ¿No tienes una cuenta?{' '}
-              <Link href="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
                 Regístrate
               </Link>
             </p>

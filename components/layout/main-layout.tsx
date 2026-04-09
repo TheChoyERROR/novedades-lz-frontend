@@ -11,14 +11,16 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Toaster
         position="top-right"
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: 'var(--surface-elevated)',
+            color: 'var(--foreground)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 16px 36px rgba(89, 11, 49, 0.16)',
           },
           success: {
             iconTheme: {

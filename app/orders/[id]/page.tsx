@@ -79,13 +79,13 @@ export default function OrderDetailPage() {
       <nav className="mb-8">
         <ol className="flex items-center space-x-2 text-sm">
           <li>
-            <Link href="/" className="text-gray-500 hover:text-indigo-600">
+            <Link href="/" className="text-gray-500 hover:text-primary-600">
               Inicio
             </Link>
           </li>
           <li className="text-gray-400">/</li>
           <li>
-            <Link href="/track-order" className="text-gray-500 hover:text-indigo-600">
+            <Link href="/track-order" className="text-gray-500 hover:text-primary-600">
               Rastrear Pedido
             </Link>
           </li>

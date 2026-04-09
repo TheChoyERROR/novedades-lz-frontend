@@ -104,8 +104,8 @@ export function ImageUpload({
       <div
         className={cn(
           'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
-          isDragging && !disabled && 'border-indigo-500 bg-indigo-50',
-          !isDragging && !displayError && 'border-gray-300 hover:border-indigo-400',
+          isDragging && !disabled && 'border-primary-500 bg-primary-50',
+          !isDragging && !displayError && 'border-gray-300 hover:border-primary-400',
           displayError && 'border-red-300 bg-red-50',
           disabled && 'opacity-50 cursor-not-allowed bg-gray-50'
         )}

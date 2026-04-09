@@ -16,7 +16,7 @@ export function Spinner({ size = 'md', className }: SpinnerProps) {
 
   return (
     <svg
-      className={cn('animate-spin text-indigo-600', sizes[size], className)}
+      className={cn('animate-spin text-primary-600', sizes[size], className)}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -40,10 +40,10 @@ export function Spinner({ size = 'md', className }: SpinnerProps) {
 
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center">
         <Spinner size="lg" />
-        <p className="mt-4 text-gray-600">Cargando...</p>
+        <p className="mt-4 text-muted-foreground">Cargando...</p>
       </div>
     </div>
   );

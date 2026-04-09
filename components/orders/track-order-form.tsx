@@ -47,7 +47,7 @@ export function TrackOrderForm() {
         <CardContent className="p-6">
           <div className="text-center mb-6">
             <svg
-              className="mx-auto h-12 w-12 text-indigo-600"
+              className="mx-auto h-12 w-12 text-primary-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
