@@ -24,6 +24,14 @@ export interface ImageValidationSuccess {
 
 export type ImageValidationResult = ImageValidationError | ImageValidationSuccess;
 
+const isAllowedMimeType = (type: string): boolean => {
+  return IMAGE_CONSTRAINTS.ALLOWED_TYPES.some((allowedType) => allowedType === type);
+};
+
+const isAllowedFileExtension = (extension: string): boolean => {
+  return IMAGE_CONSTRAINTS.ALLOWED_EXTENSIONS.some((allowedExtension) => allowedExtension === extension);
+};
+
 /**
  * Validate image file before upload
  * @param file - File to validate
@@ -39,7 +47,7 @@ export function validateImageFile(file: File | null | undefined): ImageValidatio
   }
 
   // Check file type
-  if (!IMAGE_CONSTRAINTS.ALLOWED_TYPES.includes(file.type)) {
+  if (!isAllowedMimeType(file.type)) {
     return {
       isValid: false,
       error: `Tipo de archivo no permitido. Solo se aceptan: ${IMAGE_CONSTRAINTS.ALLOWED_EXTENSIONS.join(', ')}`,
@@ -87,5 +95,5 @@ export function formatFileSize(bytes: number): string {
  */
 export function isAllowedExtension(filename: string): boolean {
   const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
-  return IMAGE_CONSTRAINTS.ALLOWED_EXTENSIONS.includes(ext);
+  return isAllowedFileExtension(ext);
 }

@@ -9,37 +9,35 @@ import toast from 'react-hot-toast';
 export function useAuth() {
   const { user, token, isAuthenticated, isLoading, setAuth, logout, setLoading } = useAuthStore();
 
-  // Only validate token on initial page load, not after login/register
   useEffect(() => {
     const validateSession = async () => {
-      // Skip validation if we already have user data (just logged in)
       if (token && !user) {
         try {
           const isValid = await authService.validateToken();
           if (!isValid) {
             logout();
-            toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
+            toast.error('Sesion expirada. Por favor inicia sesion nuevamente.');
           }
         } catch (error) {
-          // Token validation failed, but don't logout if we have user data
           console.error('Token validation error:', error);
         }
       }
+
       setLoading(false);
     };
 
-    validateSession();
-  }, []); // Only run once on mount
+    void validateSession();
+  }, [logout, setLoading, token, user]);
 
   const login = async (credentials: LoginRequest) => {
     try {
       setLoading(true);
       const response = await authService.login(credentials);
       setAuth(response.data.user, response.data.token);
-      toast.success(`¡Bienvenido, ${response.data.user.fullName?.split(' ')[0]}!`);
+      toast.success(`Bienvenido, ${response.data.user.fullName?.split(' ')[0]}!`);
       return { success: true };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesion';
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -52,10 +50,10 @@ export function useAuth() {
       setLoading(true);
       const response = await authService.register(userData);
       setAuth(response.data.user, response.data.token);
-      toast.success(`¡Bienvenido, ${response.data.user.fullName?.split(' ')[0]}!`);
+      toast.success(`Bienvenido, ${response.data.user.fullName?.split(' ')[0]}!`);
       return { success: true };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage = error instanceof Error ? error.message : 'Error al registrarte';
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -65,7 +63,7 @@ export function useAuth() {
 
   const handleLogout = () => {
     logout();
-    toast.success('Logged out successfully');
+    toast.success('Sesion cerrada');
   };
 
   return {

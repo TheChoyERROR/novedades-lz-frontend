@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
-import { validateImageFile, formatFileSize, IMAGE_CONSTRAINTS } from '@/lib/utils/image-validation';
+import Image from 'next/image';
+import { useRef, useState } from 'react';
+import { IMAGE_CONSTRAINTS, formatFileSize, validateImageFile } from '@/lib/utils/image-validation';
 import { Button } from './button';
 import { cn } from '@/lib/utils/cn';
 
@@ -27,20 +28,15 @@ export function ImageUpload({
   className,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Set initial preview from currentImageUrl
-  useEffect(() => {
-    if (currentImageUrl && !value) {
-      setPreview(currentImageUrl);
-    }
-  }, [currentImageUrl, value]);
+  const preview = selectedPreview ?? currentImageUrl ?? null;
 
   const handleFileSelect = (file: File | null) => {
     if (!file) {
-      setPreview(null);
+      setSelectedPreview(null);
       setValidationError(null);
       onChange(null);
       return;
@@ -50,13 +46,13 @@ export function ImageUpload({
 
     if (!validation.isValid) {
       setValidationError(validation.error);
-      setPreview(null);
+      setSelectedPreview(null);
       onChange(null);
       return;
     }
 
     setValidationError(null);
-    setPreview(validation.preview);
+    setSelectedPreview(validation.preview);
     onChange(validation.file);
   };
 
@@ -88,7 +84,7 @@ export function ImageUpload({
   };
 
   const handleRemove = () => {
-    setPreview(null);
+    setSelectedPreview(null);
     setValidationError(null);
     onChange(null);
     if (inputRef.current) {
@@ -100,13 +96,11 @@ export function ImageUpload({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {/* Label */}
       <label className="block text-sm font-medium text-gray-700">
         {label}
         {helperText && <span className="text-gray-500 font-normal ml-2">{helperText}</span>}
       </label>
 
-      {/* Upload Area */}
       <div
         className={cn(
           'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
@@ -119,7 +113,6 @@ export function ImageUpload({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {/* Hidden File Input */}
         <input
           ref={inputRef}
           type="file"
@@ -129,19 +122,19 @@ export function ImageUpload({
           className="hidden"
         />
 
-        {/* Preview or Upload UI */}
         {preview ? (
           <div className="space-y-4">
-            {/* Image Preview */}
             <div className="relative inline-block">
-              <img
+              <Image
                 src={preview}
                 alt="Preview"
-                className="max-h-64 rounded-lg shadow-md mx-auto"
+                width={256}
+                height={256}
+                unoptimized
+                className="max-h-64 w-auto rounded-lg shadow-md mx-auto"
               />
             </div>
 
-            {/* File Info */}
             {value && (
               <div className="text-sm text-gray-600">
                 <p className="font-medium">{value.name}</p>
@@ -149,7 +142,6 @@ export function ImageUpload({
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-2 justify-center">
               <Button
                 type="button"
@@ -174,7 +166,6 @@ export function ImageUpload({
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Upload Icon */}
             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8 text-gray-400"
@@ -191,7 +182,6 @@ export function ImageUpload({
               </svg>
             </div>
 
-            {/* Upload Text */}
             <div>
               <Button
                 type="button"
@@ -202,19 +192,17 @@ export function ImageUpload({
               >
                 Seleccionar Imagen
               </Button>
-              <p className="mt-2 text-sm text-gray-500">o arrastra y suelta aquí</p>
+              <p className="mt-2 text-sm text-gray-500">o arrastra y suelta aqui</p>
             </div>
 
-            {/* Constraints Info */}
             <div className="text-xs text-gray-500 space-y-1">
               <p>Formatos: JPG, PNG, WEBP, GIF</p>
-              <p>Tamaño máximo: {IMAGE_CONSTRAINTS.MAX_SIZE_MB}MB</p>
+              <p>Tamano maximo: {IMAGE_CONSTRAINTS.MAX_SIZE_MB}MB</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Error Message */}
       {displayError && (
         <p className="text-sm text-red-600 flex items-center gap-1">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

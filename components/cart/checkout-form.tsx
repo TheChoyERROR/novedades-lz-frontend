@@ -4,15 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
 import { orderService } from '@/services/order.service';
-import { Input, Select, Button, Card, CardContent, CardFooter } from '@/components/ui';
+import { Button, Card, CardContent, CardFooter, Input, Select } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
 const paymentMethods = [
   { value: 'yape', label: 'Yape' },
   { value: 'plin', label: 'Plin' },
-  { value: 'transferencia', label: 'Transferencia Bancaria' },
-  { value: 'efectivo', label: 'Contra Entrega (Efectivo)' },
+  { value: 'cash', label: 'Contra Entrega (Efectivo)' },
 ];
 
 interface CheckoutFormData {
@@ -46,19 +45,19 @@ export function CheckoutForm() {
     }
 
     if (!formData.customerPhone.trim()) {
-      newErrors.customerPhone = 'El teléfono es requerido';
+      newErrors.customerPhone = 'El telefono es requerido';
     } else if (!/^\+?[\d\s-]{9,}$/.test(formData.customerPhone)) {
-      newErrors.customerPhone = 'Ingresa un teléfono válido';
+      newErrors.customerPhone = 'Ingresa un telefono valido';
     }
 
     if (!formData.customerEmail.trim()) {
       newErrors.customerEmail = 'El email es requerido';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
-      newErrors.customerEmail = 'Ingresa un email válido';
+      newErrors.customerEmail = 'Ingresa un email valido';
     }
 
     if (!formData.customerAddress.trim()) {
-      newErrors.customerAddress = 'La dirección es requerida';
+      newErrors.customerAddress = 'La direccion es requerida';
     }
 
     if (!formData.customerCity.trim()) {
@@ -83,7 +82,7 @@ export function CheckoutForm() {
     if (!validateForm()) return;
 
     if (items.length === 0) {
-      toast.error('Tu carrito está vacío');
+      toast.error('Tu carrito esta vacio');
       return;
     }
 
@@ -105,7 +104,7 @@ export function CheckoutForm() {
 
       const order = await orderService.createOrder(orderData);
       clearCart();
-      toast.success('¡Pedido creado exitosamente!');
+      toast.success('Pedido creado exitosamente');
       router.push(`/order-confirmation/${order.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
@@ -122,12 +121,11 @@ export function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Customer Info */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardContent>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Información de Contacto
+                Informacion de Contacto
               </h2>
 
               <div className="space-y-4">
@@ -137,12 +135,12 @@ export function CheckoutForm() {
                   value={formData.customerName}
                   onChange={handleChange}
                   error={errors.customerName}
-                  placeholder="Juan Pérez"
+                  placeholder="Juan Perez"
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Teléfono / WhatsApp"
+                    label="Telefono / WhatsApp"
                     name="customerPhone"
                     type="tel"
                     value={formData.customerPhone}
@@ -152,7 +150,7 @@ export function CheckoutForm() {
                   />
 
                   <Input
-                    label="Correo Electrónico"
+                    label="Correo Electronico"
                     name="customerEmail"
                     type="email"
                     value={formData.customerEmail}
@@ -168,12 +166,12 @@ export function CheckoutForm() {
           <Card>
             <CardContent>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Dirección de Envío
+                Direccion de Envio
               </h2>
 
               <div className="space-y-4">
                 <Input
-                  label="Dirección"
+                  label="Direccion"
                   name="customerAddress"
                   value={formData.customerAddress}
                   onChange={handleChange}
@@ -196,11 +194,11 @@ export function CheckoutForm() {
           <Card>
             <CardContent>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Método de Pago
+                Metodo de Pago
               </h2>
 
               <Select
-                label="Selecciona método de pago"
+                label="Selecciona metodo de pago"
                 name="paymentMethod"
                 options={paymentMethods}
                 value={formData.paymentMethod}
@@ -209,21 +207,18 @@ export function CheckoutForm() {
 
               <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
                 <p className="text-sm text-indigo-800">
-                  <strong>Nota:</strong> Después de realizar el pedido, te contactaremos
-                  por WhatsApp para confirmar el pago y coordinar el envío.
+                  <strong>Nota:</strong> Despues de realizar el pedido, te contactaremos
+                  por WhatsApp para confirmar el pago y coordinar el envio.
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardContent>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Tu Pedido
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tu Pedido</h2>
 
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {items.map((item) => (
@@ -244,7 +239,7 @@ export function CheckoutForm() {
                   <span>{formatPrice(totalAmount, 'PEN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Envío</span>
+                  <span>Envio</span>
                   <span className="text-green-600">Gratis</span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">

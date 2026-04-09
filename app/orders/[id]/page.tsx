@@ -94,7 +94,7 @@ export default function OrderDetailPage() {
         </ol>
       </nav>
 
-      <OrderDetail order={order} />
-    </div>
+        <OrderDetail order={order} onOrderUpdated={setOrder} />
+      </div>
   );
 }

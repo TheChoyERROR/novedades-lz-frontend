@@ -39,7 +39,7 @@ export default function ProductDetailPage() {
             setRelatedProducts(
               related.content.filter((p: Product) => p.id !== productId).slice(0, 4)
             );
-          } catch (relatedError) {
+          } catch {
             // console.warn('Failed to load related products:', relatedError);
             // Don't fail the whole page if related products fail
           }

@@ -24,7 +24,7 @@ function AdminDashboardContent() {
       try {
         const [productsRes, ordersRes] = await Promise.all([
           productService.getAllProducts({ page: 0, size: 1 }),
-          orderService.getAllOrders({ page: 0, size: 100 }),
+          orderService.getAllOrders({ page: 0, size: 100, sortBy: 'createdAt', direction: 'DESC' }),
         ]);
 
         const pendingOrders = ordersRes.content.filter(
@@ -33,7 +33,7 @@ function AdminDashboardContent() {
 
         const totalRevenue = ordersRes.content
           .filter((order) => order.status !== 'CANCELLED')
-          .reduce((sum, order) => sum + order.totalAmount, 0);
+          .reduce((sum, order) => sum + order.total, 0);
 
         setStats({
           totalProducts: productsRes.totalElements,
@@ -48,7 +48,7 @@ function AdminDashboardContent() {
       }
     };
 
-    fetchStats();
+    void fetchStats();
   }, []);
 
   if (isLoading) {
@@ -61,11 +61,8 @@ function AdminDashboardContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
-        Panel de Administración
-      </h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Panel de Administracion</h1>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
@@ -125,26 +122,27 @@ function AdminDashboardContent() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Ingresos Totales</p>
-                <p className="text-2xl font-bold text-gray-900">{formatPrice(stats?.totalRevenue || 0, 'PEN')}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatPrice(stats?.totalRevenue || 0, 'PEN')}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Gestión de Productos</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Gestion de Productos</h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
-              Administra tu catálogo de productos, agrega nuevos productos o actualiza el stock.
+              Administra tu catalogo de productos, agrega nuevos productos o actualiza el stock.
             </p>
             <Link href="/admin/products" className="inline-block">
               <button className="text-indigo-600 hover:text-indigo-700 font-medium">
-                Ir a Productos →
+                Ir a Productos -&gt;
               </button>
             </Link>
           </CardContent>
@@ -152,7 +150,7 @@ function AdminDashboardContent() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Gestión de Pedidos</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Gestion de Pedidos</h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
@@ -160,7 +158,7 @@ function AdminDashboardContent() {
             </p>
             <Link href="/admin/orders" className="inline-block">
               <button className="text-indigo-600 hover:text-indigo-700 font-medium">
-                Ir a Pedidos →
+                Ir a Pedidos -&gt;
               </button>
             </Link>
           </CardContent>

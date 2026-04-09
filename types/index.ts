@@ -7,8 +7,9 @@ export enum UserRole {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
+  PAYMENT_REVIEW = 'PAYMENT_REVIEW',
+  PAYMENT_REJECTED = 'PAYMENT_REJECTED',
+  CONFIRMED = 'CONFIRMED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
 }
@@ -32,10 +33,10 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  username: string;
   password: string;
   email: string;
   fullName: string;
+  phone?: string;
 }
 
 export interface AuthResponse {
@@ -71,7 +72,6 @@ export interface ProductCreateRequest {
   price: number;
   stock: number;
   category: string;
-  // imageUrl removed - now handled via multipart/form-data with File upload
 }
 
 export interface ProductUpdateRequest {
@@ -80,7 +80,6 @@ export interface ProductUpdateRequest {
   price?: number;
   stock?: number;
   category?: string;
-  // imageUrl removed - now handled via multipart/form-data with File upload
 }
 
 // ==================== ORDER TYPES ====================
@@ -140,6 +139,8 @@ export interface PageRequest {
   page?: number;
   size?: number;
   sort?: string;
+  sortBy?: string;
+  direction?: 'ASC' | 'DESC';
 }
 
 export interface PageResponse<T> {

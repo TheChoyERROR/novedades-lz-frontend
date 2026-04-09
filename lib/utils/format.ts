@@ -1,6 +1,3 @@
-/**
- * Format price to currency
- */
 export const formatPrice = (price: number, currency: string = 'USD'): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -8,11 +5,17 @@ export const formatPrice = (price: number, currency: string = 'USD'): string => 
   }).format(price);
 };
 
-/**
- * Format date to localized string
- */
-export const formatDate = (date: string | Date): string => {
+export const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) {
+    return '-';
+  }
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (Number.isNaN(dateObj.getTime())) {
+    return '-';
+  }
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
@@ -20,11 +23,17 @@ export const formatDate = (date: string | Date): string => {
   }).format(dateObj);
 };
 
-/**
- * Format date with time
- */
-export const formatDateTime = (date: string | Date): string => {
+export const formatDateTime = (date: string | Date | null | undefined): string => {
+  if (!date) {
+    return '-';
+  }
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (Number.isNaN(dateObj.getTime())) {
+    return '-';
+  }
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
@@ -34,17 +43,11 @@ export const formatDateTime = (date: string | Date): string => {
   }).format(dateObj);
 };
 
-/**
- * Truncate text with ellipsis
- */
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+  return `${text.substring(0, maxLength)}...`;
 };
 
-/**
- * Get initials from name
- */
 export const getInitials = (name: string): string => {
   const parts = name.split(' ');
   if (parts.length >= 2) {

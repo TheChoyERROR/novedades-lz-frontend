@@ -1,33 +1,20 @@
 import apiClient from '@/lib/api/client';
-import { Order, OrderCreateRequest, OrderUpdateRequest, PageResponse, ApiResponse } from '@/types';
+import { ApiResponse, Order, OrderCreateRequest, OrderStatus, PageResponse } from '@/types';
 import { AxiosResponse } from 'axios';
+
+interface OrderQueryParams {
+  status?: OrderStatus;
+  customerPhone?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  direction?: 'ASC' | 'DESC';
+}
 
 class OrderService {
   private readonly BASE_URL = '/orders';
 
-  /**
-   * Get all orders for current user
-   */
-  async getMyOrders(params?: {
-    page?: number;
-    size?: number;
-    sort?: string;
-  }): Promise<PageResponse<Order>> {
-    const response: AxiosResponse<ApiResponse<PageResponse<Order>>> = await apiClient.get(
-      `${this.BASE_URL}/my-orders`,
-      { params }
-    );
-    return response.data.data;
-  }
-
-  /**
-   * Get all orders (ADMIN only)
-   */
-  async getAllOrders(params?: {
-    page?: number;
-    size?: number;
-    sort?: string;
-  }): Promise<PageResponse<Order>> {
+  async getAllOrders(params?: OrderQueryParams): Promise<PageResponse<Order>> {
     const response: AxiosResponse<ApiResponse<PageResponse<Order>>> = await apiClient.get(
       this.BASE_URL,
       { params }
@@ -35,9 +22,6 @@ class OrderService {
     return response.data.data;
   }
 
-  /**
-   * Get order by ID
-   */
   async getOrderById(id: number): Promise<Order> {
     const response: AxiosResponse<ApiResponse<Order>> = await apiClient.get(
       `${this.BASE_URL}/${id}`
@@ -45,19 +29,6 @@ class OrderService {
     return response.data.data;
   }
 
-  /**
-   * Get order by order number (for tracking)
-   */
-  async getOrderByNumber(orderNumber: string): Promise<Order> {
-    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.get(
-      `${this.BASE_URL}/track/${orderNumber}`
-    );
-    return response.data.data;
-  }
-
-  /**
-   * Create new order
-   */
   async createOrder(order: OrderCreateRequest): Promise<Order> {
     const response: AxiosResponse<ApiResponse<Order>> = await apiClient.post(
       this.BASE_URL,
@@ -66,23 +37,49 @@ class OrderService {
     return response.data.data;
   }
 
-  /**
-   * Update order status (ADMIN only)
-   */
-  async updateOrderStatus(id: number, status: string): Promise<Order> {
-    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.patch(
+  async updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
+    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.put(
       `${this.BASE_URL}/${id}/status`,
       { status }
     );
     return response.data.data;
   }
 
-  /**
-   * Cancel order
-   */
-  async cancelOrder(id: number): Promise<Order> {
-    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.patch(
-      `${this.BASE_URL}/${id}/cancel`
+  async uploadYapeProof(id: number, proof: File): Promise<Order> {
+    const formData = new FormData();
+    formData.append('proof', proof);
+
+    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.post(
+      `${this.BASE_URL}/${id}/yape-proof`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data.data;
+  }
+
+  async approvePayment(
+    id: number,
+    payload?: { operationNumber?: string; notes?: string }
+  ): Promise<Order> {
+    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.post(
+      `${this.BASE_URL}/${id}/approve-payment`,
+      payload ?? {}
+    );
+    return response.data.data;
+  }
+
+  async rejectPayment(
+    id: number,
+    payload: { notes: string; operationNumber?: string }
+  ): Promise<Order> {
+    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.post(
+      `${this.BASE_URL}/${id}/reject-payment`,
+      payload
     );
     return response.data.data;
   }

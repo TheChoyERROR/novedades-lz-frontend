@@ -1,10 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth';
 import { Product, ProductCreateRequest } from '@/types';
 import { productService } from '@/services/product.service';
-import { Button, Card, CardContent, Input, Modal, Spinner, Badge, ImageUpload } from '@/components/ui';
+import { Badge, Button, Card, CardContent, ImageUpload, Input, Modal, Spinner } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
@@ -13,7 +14,9 @@ function AdminProductsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<ProductCreateRequest>({
     name: '',
@@ -36,7 +39,7 @@ function AdminProductsContent() {
   };
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
   }, []);
 
   const openCreateModal = () => {
@@ -78,18 +81,22 @@ function AdminProductsContent() {
     setIsSubmitting(true);
 
     try {
+      if (!editingProduct && !imageFile) {
+        toast.error('Selecciona una imagen para crear el producto');
+        return;
+      }
+
       if (editingProduct) {
-        // Update product with optional new image
         await productService.updateProduct(editingProduct.id, formData, imageFile || undefined);
         toast.success('Producto actualizado exitosamente');
       } else {
-        // Create product with optional image
         await productService.createProduct(formData, imageFile || undefined);
         toast.success('Producto creado exitosamente');
       }
+
       setIsModalOpen(false);
       setImageFile(null);
-      fetchProducts();
+      await fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
       toast.error('Error al guardar producto. Verifica los datos.');
@@ -98,16 +105,25 @@ function AdminProductsContent() {
     }
   };
 
-  const handleDelete = async (productId: number) => {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setProductToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
 
     try {
-      await productService.deleteProduct(productId);
+      await productService.deleteProduct(productToDelete.id);
       toast.success('Producto eliminado');
-      fetchProducts();
+      setProductToDelete(null);
+      await fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
       toast.error('Error al eliminar producto');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -122,11 +138,10 @@ function AdminProductsContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Gestion de Productos</h1>
         <Button onClick={openCreateModal}>+ Nuevo Producto</Button>
       </div>
 
-      {/* Products Table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -137,7 +152,7 @@ function AdminProductsContent() {
                     Producto
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
+                    Categoria
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Precio
@@ -157,9 +172,11 @@ function AdminProductsContent() {
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                           {product.imageUrl ? (
-                            <img
+                            <Image
                               src={product.imageUrl}
                               alt={product.name}
+                              width={40}
+                              height={40}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -171,9 +188,7 @@ function AdminProductsContent() {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {product.name}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
                           <div className="text-sm text-gray-500 truncate max-w-xs">
                             {product.description}
                           </div>
@@ -192,18 +207,14 @@ function AdminProductsContent() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditModal(product)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => openEditModal(product)}>
                         Editar
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => setProductToDelete(product)}
                       >
                         Eliminar
                       </Button>
@@ -216,7 +227,6 @@ function AdminProductsContent() {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -231,10 +241,9 @@ function AdminProductsContent() {
             onChange={handleChange}
             required
           />
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descripción
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Descripcion</label>
             <textarea
               name="description"
               value={formData.description}
@@ -244,6 +253,7 @@ function AdminProductsContent() {
               required
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Precio"
@@ -263,29 +273,29 @@ function AdminProductsContent() {
               required
             />
           </div>
+
           <Input
-            label="Categoría"
+            label="Categoria"
             name="category"
             value={formData.category}
             onChange={handleChange}
             required
           />
 
-          {/* Image Upload with Cloudinary */}
           <ImageUpload
             value={imageFile}
             onChange={setImageFile}
             currentImageUrl={editingProduct?.imageUrl}
             label="Imagen del Producto"
-            helperText="(Opcional - Se subirá a Cloudinary)"
+            helperText={
+              editingProduct
+                ? '(Opcional - mantiene la imagen actual si no la cambias)'
+                : '(Obligatoria - se subira al backend local o a Cloudinary segun la configuracion)'
+            }
           />
 
           <div className="flex justify-end gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsModalOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" isLoading={isSubmitting}>
@@ -293,6 +303,58 @@ function AdminProductsContent() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={productToDelete !== null}
+        onClose={closeDeleteModal}
+        title="Eliminar producto"
+        size="sm"
+      >
+        <div className="space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+                />
+              </svg>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-900">
+                Esta accion eliminara el producto del catalogo.
+              </p>
+              <p className="text-sm text-gray-600">
+                {productToDelete
+                  ? `Se eliminara "${productToDelete.name}" y esta accion no se puede deshacer.`
+                  : 'Confirma si deseas continuar.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeDeleteModal}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleDelete}
+              isLoading={isDeleting}
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
