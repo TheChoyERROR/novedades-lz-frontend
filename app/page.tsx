@@ -72,7 +72,8 @@ export default function Home() {
               <Link href="/track-order">
                 <Button
                   size="lg"
-                  className="w-full bg-white text-primary-700 shadow-[0_14px_28px_rgba(0,0,0,0.14)] hover:bg-primary-50 sm:w-auto"
+                  variant="white"
+                  className="w-full sm:w-auto"
                 >
                   Rastrear pedido
                 </Button>
@@ -187,7 +188,7 @@ export default function Home() {
             >
               <Button
                 size="lg"
-                className="bg-white text-primary-700 shadow-[0_14px_28px_rgba(0,0,0,0.18)] hover:bg-primary-50"
+                variant="white"
               >
                 <svg
                   className="mr-2 h-5 w-5"
