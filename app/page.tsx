@@ -169,7 +169,7 @@ export default function Home() {
             Contáctanos por WhatsApp y te atenderemos al instante
           </p>
           <a
-            href="https://wa.me/51987654321"
+            href="https://wa.me/51939662630"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block mt-8"
