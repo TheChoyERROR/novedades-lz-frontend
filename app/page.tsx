@@ -4,28 +4,86 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ProductGrid } from '@/components/products';
-import { buttonClasses } from '@/components/ui';
+import { BackendStatusNotice, buttonClasses } from '@/components/ui';
+import {
+  ApiAvailabilityState,
+  BACKEND_RETRY_DELAY_MS,
+  isBackendUnavailableError,
+} from '@/lib/api/client';
 import { productService } from '@/services/product.service';
 import { Product } from '@/types';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadState, setLoadState] = useState<ApiAvailabilityState>('loading');
+  const [retryTick, setRetryTick] = useState(0);
+  const [warmupAttempts, setWarmupAttempts] = useState(0);
 
   useEffect(() => {
+    let isCancelled = false;
+    let retryTimeout: number | undefined;
+
     const fetchProducts = async () => {
+      setIsLoading(true);
+      setLoadState((current) => (current === 'warming_up' ? current : 'loading'));
+
       try {
         const response = await productService.getAllProducts({ page: 0, size: 8 });
+        if (isCancelled) {
+          return;
+        }
+
         setProducts(response.content);
+        setLoadState('ready');
+        setWarmupAttempts(0);
       } catch (error) {
+        if (isCancelled) {
+          return;
+        }
+
         console.error('Error fetching products:', error);
+
+        if (isBackendUnavailableError(error)) {
+          setLoadState('warming_up');
+          setWarmupAttempts((current) => current + 1);
+          retryTimeout = window.setTimeout(() => {
+            setRetryTick((current) => current + 1);
+          }, BACKEND_RETRY_DELAY_MS);
+          return;
+        }
+
+        setLoadState('error');
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     void fetchProducts();
-  }, []);
+
+    return () => {
+      isCancelled = true;
+
+      if (retryTimeout) {
+        window.clearTimeout(retryTimeout);
+      }
+    };
+  }, [retryTick]);
+
+  const handleRetry = () => {
+    setWarmupAttempts(0);
+    setLoadState('loading');
+    setRetryTick((current) => current + 1);
+  };
+
+  const isBackendWarmingUp = loadState === 'warming_up';
+  const isGridBusy = isLoading || isBackendWarmingUp;
+  const warmupTitle =
+    warmupAttempts > 1 ? 'La tienda ya casi esta lista' : 'Estamos conectando con la tienda';
+  const warmupMessage =
+    'Si el backend estaba inactivo, puede tardar unos segundos en volver. Seguimos intentando sin que tengas que recargar.';
 
   return (
     <div>
@@ -166,7 +224,43 @@ export default function Home() {
             </p>
           </div>
 
-          <ProductGrid products={products} isLoading={isLoading} />
+          {isBackendWarmingUp ? (
+            <BackendStatusNotice
+              className="mb-6"
+              title={warmupTitle}
+              message={warmupMessage}
+              onRetry={handleRetry}
+            />
+          ) : null}
+
+          {loadState === 'error' ? (
+            <BackendStatusNotice
+              variant="error"
+              className="mb-6"
+              title="No pudimos cargar los productos por ahora"
+              message="Puedes volver a intentarlo en unos segundos. Cuando el backend responde, el catalogo aparece normalmente."
+              onRetry={handleRetry}
+            />
+          ) : null}
+
+          <ProductGrid
+            products={products}
+            isLoading={isGridBusy}
+            emptyMessage={loadState === 'error' ? 'No pudimos mostrar los destacados' : undefined}
+            emptyDescription={
+              loadState === 'error'
+                ? 'Usa el boton de reintentar o vuelve en un momento.'
+                : undefined
+            }
+            loadingMessage={
+              isBackendWarmingUp ? 'Despertando catalogo y stock...' : 'Cargando productos...'
+            }
+            loadingDescription={
+              isBackendWarmingUp
+                ? 'Apenas el backend termine de arrancar, veras los productos sin refrescar la pagina.'
+                : 'Esto suele tardar solo unos segundos.'
+            }
+          />
 
           <div className="mt-12 text-center">
             <Link href="/products" className={buttonClasses({ size: 'lg' })}>

@@ -11,6 +11,7 @@ export { Badge } from './badge';
 export type { BadgeProps } from './badge';
 
 export { Spinner, LoadingScreen } from './spinner';
+export { BackendStatusNotice } from './backend-status-notice';
 
 export { Modal } from './modal';
 

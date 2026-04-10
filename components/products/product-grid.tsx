@@ -1,22 +1,37 @@
 'use client';
 
+import { Spinner } from '@/components/ui';
 import { Product } from '@/types';
 import { ProductCard } from './product-card';
-import { Spinner } from '@/components/ui';
 
 interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
   emptyMessage?: string;
+  emptyDescription?: string;
+  loadingMessage?: string;
+  loadingDescription?: string;
 }
 
-export function ProductGrid({ products, isLoading, emptyMessage = 'No hay productos disponibles' }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  isLoading,
+  emptyMessage = 'No hay productos disponibles',
+  emptyDescription = 'Intenta ajustar los filtros de busqueda.',
+  loadingMessage = 'Cargando productos...',
+  loadingDescription = 'Esto suele tardar solo unos segundos.',
+}: ProductGridProps) {
   if (isLoading && (!products || products.length === 0)) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
           <Spinner size="lg" />
-          <p className="text-gray-500 animate-pulse text-sm">Cargando productos...</p>
+          <p className="text-sm text-gray-500 animate-pulse">{loadingMessage}</p>
+          {loadingDescription ? (
+            <p className="max-w-sm text-center text-xs text-gray-500">
+              {loadingDescription}
+            </p>
+          ) : null}
         </div>
       </div>
     );
@@ -24,7 +39,7 @@ export function ProductGrid({ products, isLoading, emptyMessage = 'No hay produc
 
   if (!products || (products.length === 0 && !isLoading)) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <svg
           className="mx-auto h-12 w-12 text-gray-400"
           fill="none"
@@ -39,15 +54,17 @@ export function ProductGrid({ products, isLoading, emptyMessage = 'No hay produc
           />
         </svg>
         <h3 className="mt-4 text-lg font-medium text-gray-900">{emptyMessage}</h3>
-        <p className="mt-2 text-sm text-gray-500">
-          Intenta ajustar los filtros de búsqueda.
-        </p>
+        <p className="mt-2 text-sm text-gray-500">{emptyDescription}</p>
       </div>
     );
   }
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+    <div
+      className={`grid grid-cols-1 gap-6 transition-opacity duration-300 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
+        isLoading ? 'pointer-events-none opacity-50' : 'opacity-100'
+      }`}
+    >
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
