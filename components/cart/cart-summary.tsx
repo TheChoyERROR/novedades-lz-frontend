@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCartStore } from '@/stores/cart-store';
 import { CartItem } from './cart-item';
-import { Button, Card, CardContent, CardFooter } from '@/components/ui';
+import { Button, Card, CardContent, CardFooter, buttonClasses } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 
 export function CartSummary() {
@@ -31,8 +31,8 @@ export function CartSummary() {
         <p className="mt-2 text-sm text-gray-500">
           Explora nuestros productos y agrega algo al carrito.
         </p>
-        <Link href="/products">
-          <Button className="mt-6">Ver Productos</Button>
+        <Link href="/products" className={buttonClasses({ className: 'mt-6' })}>
+          Ver Productos
         </Link>
       </div>
     );
@@ -86,10 +86,11 @@ export function CartSummary() {
             </div>
           </CardContent>
           <CardFooter>
-            <Link href="/checkout" className="w-full">
-              <Button className="w-full" size="lg">
-                Proceder al Pago
-              </Button>
+            <Link
+              href="/checkout"
+              className={buttonClasses({ size: 'lg', className: 'w-full' })}
+            >
+              Proceder al Pago
             </Link>
           </CardFooter>
         </Card>

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -24,6 +24,10 @@ export const metadata: Metadata = {
     locale: 'es_PE',
     siteName: 'Novedades LZ',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#e4308c',
 };
 
 const themeScript = `

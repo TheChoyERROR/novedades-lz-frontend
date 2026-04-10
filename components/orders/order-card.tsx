@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Order } from '@/types';
-import { Badge, Button, Card, CardContent } from '@/components/ui';
+import { Badge, Card, CardContent, buttonClasses } from '@/components/ui';
 import { formatDate, formatPrice } from '@/lib/utils/format';
 import { orderStatusConfig } from '@/lib/utils/order-status';
 
@@ -59,10 +59,11 @@ export function OrderCard({ order }: OrderCardProps) {
         </div>
 
         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
-          <Link href={`/orders/${order.id}`}>
-            <Button variant="outline" size="sm">
-              Ver Detalles
-            </Button>
+          <Link
+            href={`/orders/${order.id}`}
+            className={buttonClasses({ variant: 'outline', size: 'sm' })}
+          >
+            Ver Detalles
           </Link>
         </div>
       </CardContent>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { Button } from '@/components/ui';
+import { Button, buttonClasses } from '@/components/ui';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { cn } from '@/lib/utils/cn';
 import { useCartStore } from '@/stores/cart-store';
@@ -115,13 +115,14 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Iniciar sesion
-                  </Button>
+                <Link
+                  href="/login"
+                  className={buttonClasses({ variant: 'ghost', size: 'sm' })}
+                >
+                  Iniciar sesion
                 </Link>
-                <Link href="/register">
-                  <Button size="sm">Registrarse</Button>
+                <Link href="/register" className={buttonClasses({ size: 'sm' })}>
+                  Registrarse
                 </Link>
               </>
             )}
@@ -219,15 +220,23 @@ export function Header() {
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-2">
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full">
-                        Iniciar sesion
-                      </Button>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={buttonClasses({
+                        variant: 'ghost',
+                        size: 'sm',
+                        className: 'w-full',
+                      })}
+                    >
+                      Iniciar sesion
                     </Link>
-                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button size="sm" className="w-full">
-                        Registrarse
-                      </Button>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={buttonClasses({ size: 'sm', className: 'w-full' })}
+                    >
+                      Registrarse
                     </Link>
                   </div>
                 )}

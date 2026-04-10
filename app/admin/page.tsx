@@ -141,10 +141,11 @@ function AdminDashboardContent() {
             <p className="text-gray-600">
               Administra tu catalogo de productos, agrega nuevos productos o actualiza el stock.
             </p>
-            <Link href="/admin/products" className="inline-block">
-              <button className="text-primary-600 hover:text-primary-700 font-medium">
-                Ir a Productos -&gt;
-              </button>
+            <Link
+              href="/admin/products"
+              className="inline-block font-medium text-primary-600 hover:text-primary-700"
+            >
+              Ir a Productos -&gt;
             </Link>
           </CardContent>
         </Card>
@@ -157,10 +158,11 @@ function AdminDashboardContent() {
             <p className="text-gray-600">
               Revisa los pedidos pendientes, actualiza estados y gestiona las entregas.
             </p>
-            <Link href="/admin/orders" className="inline-block">
-              <button className="text-primary-600 hover:text-primary-700 font-medium">
-                Ir a Pedidos -&gt;
-              </button>
+            <Link
+              href="/admin/orders"
+              className="inline-block font-medium text-primary-600 hover:text-primary-700"
+            >
+              Ir a Pedidos -&gt;
             </Link>
           </CardContent>
         </Card>

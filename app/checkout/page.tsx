@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCartStore } from '@/stores/cart-store';
 import { CheckoutForm } from '@/components/cart';
-import { Button } from '@/components/ui';
+import { buttonClasses } from '@/components/ui';
 
 export default function CheckoutPage() {
   const { items } = useCartStore();
@@ -31,8 +31,8 @@ export default function CheckoutPage() {
           <p className="mt-2 text-gray-600">
             Agrega algunos productos para continuar con el pago.
           </p>
-          <Link href="/products" className="inline-block mt-6">
-            <Button>Ver Productos</Button>
+          <Link href="/products" className={buttonClasses({ className: 'mt-6' })}>
+            Ver Productos
           </Link>
         </div>
       </div>
