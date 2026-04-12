@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { clearStoredAuthState, getStoredAuthToken } from '@/lib/auth/storage';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -61,6 +62,26 @@ function isRetryableError(error: AxiosError, config?: RetryableRequestConfig) {
   return RETRYABLE_STATUS_CODES.has(error.response.status);
 }
 
+function shouldResetSessionOnAuthError(error: AxiosError) {
+  if (!error.response) {
+    return false;
+  }
+
+  if (error.response.status === 401) {
+    return true;
+  }
+
+  if (error.response.status !== 403 || typeof window === 'undefined') {
+    return false;
+  }
+
+  const requestUrl = error.config?.url ?? '';
+  const isAdminArea = window.location.pathname.startsWith('/admin');
+  const isSessionValidationRequest = requestUrl.startsWith('/auth/me');
+
+  return isAdminArea || isSessionValidationRequest;
+}
+
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -70,11 +91,9 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = getStoredAuthToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -87,12 +106,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    // Handle 401 Unauthorized - token expired or invalid
-    if (error.response?.status === 401) {
+    if (shouldResetSessionOnAuthError(error)) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        // Redirect to login page
+        clearStoredAuthState();
         window.location.href = '/login';
       }
     }

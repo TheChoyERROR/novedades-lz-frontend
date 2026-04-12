@@ -7,27 +7,65 @@ import { LoginRequest, RegisterRequest } from '@/types';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
-  const { user, token, isAuthenticated, isLoading, setAuth, logout, setLoading } = useAuthStore();
+  const { user, token, isAuthenticated, isLoading, setAuth, logout, setLoading, updateUser } =
+    useAuthStore();
 
   useEffect(() => {
+    let isMounted = true;
+
     const validateSession = async () => {
-      if (token && !user) {
-        try {
-          const isValid = await authService.validateToken();
-          if (!isValid) {
-            logout();
-            toast.error('Sesion expirada. Por favor inicia sesion nuevamente.');
-          }
-        } catch (error) {
-          console.error('Token validation error:', error);
+      if (!token) {
+        if ((isAuthenticated || user) && isMounted) {
+          logout();
         }
+
+        if (isMounted) {
+          setLoading(false);
+        }
+
+        return;
       }
 
-      setLoading(false);
+      try {
+        const currentUser = await authService.getCurrentUser();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const shouldRefreshUser =
+          !user ||
+          user.id !== currentUser.id ||
+          user.email !== currentUser.email ||
+          user.role !== currentUser.role;
+
+        if (shouldRefreshUser) {
+          updateUser(currentUser);
+        }
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        try {
+          logout();
+          toast.error('Sesion expirada. Por favor inicia sesion nuevamente.');
+        } catch (logoutError) {
+          console.error('Session logout error:', logoutError);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     };
 
     void validateSession();
-  }, [logout, setLoading, token, user]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, logout, setLoading, token, updateUser, user]);
 
   const login = async (credentials: LoginRequest) => {
     try {
