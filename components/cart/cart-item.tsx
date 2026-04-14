@@ -22,7 +22,7 @@ export function CartItem({ item }: CartItemProps) {
   };
 
   const handleIncrement = () => {
-    if (quantity < product.stock) {
+    if (!product.trackInventory || quantity < product.stock) {
       updateQuantity(product.id, quantity + 1);
     }
   };
@@ -89,7 +89,7 @@ export function CartItem({ item }: CartItemProps) {
         </span>
         <button
           onClick={handleIncrement}
-          disabled={quantity >= product.stock}
+          disabled={product.trackInventory && quantity >= product.stock}
           className="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           +

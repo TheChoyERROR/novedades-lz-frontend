@@ -33,6 +33,13 @@ export const useCartStore = create<CartState>()(
       addItem: (product: Product, quantity = 1) => {
         const { items } = get();
         const existingItem = items.find((item) => item.product.id === product.id);
+        const normalizedQuantity = product.trackInventory
+          ? Math.max(0, Math.min(quantity, product.stock))
+          : quantity;
+
+        if (normalizedQuantity <= 0) {
+          return;
+        }
 
         let newItems: CartItem[];
 
@@ -40,12 +47,17 @@ export const useCartStore = create<CartState>()(
           // Update quantity if item already exists
           newItems = items.map((item) =>
             item.product.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
+              ? {
+                  ...item,
+                  quantity: product.trackInventory
+                    ? Math.min(item.quantity + normalizedQuantity, product.stock)
+                    : item.quantity + normalizedQuantity,
+                }
               : item
           );
         } else {
           // Add new item
-          newItems = [...items, { product, quantity }];
+          newItems = [...items, { product, quantity: normalizedQuantity }];
         }
 
         const { totalItems, totalAmount } = calculateTotals(newItems);
@@ -69,7 +81,14 @@ export const useCartStore = create<CartState>()(
         }
 
         const newItems = items.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
+          item.product.id === productId
+            ? {
+                ...item,
+                quantity: item.product.trackInventory
+                  ? Math.min(quantity, item.product.stock)
+                  : quantity,
+              }
+            : item
         );
 
         const { totalItems, totalAmount } = calculateTotals(newItems);

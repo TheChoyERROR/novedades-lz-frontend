@@ -58,9 +58,11 @@ export interface Product {
   description: string;
   price: number;
   stock: number;
+  trackInventory: boolean;
   category: string;
   imageUrl: string | null;
   imageUrls: string[];
+  videoUrl: string | null;
   active: boolean;
   lowStock: boolean;
   createdAt: string | null;
@@ -71,7 +73,8 @@ export interface ProductCreateRequest {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  stock?: number;
+  trackInventory: boolean;
   category: string;
 }
 
@@ -80,8 +83,10 @@ export interface ProductUpdateRequest {
   description?: string;
   price?: number;
   stock?: number;
+  trackInventory?: boolean;
   category?: string;
   imageUrls?: string[];
+  removeVideo?: boolean;
 }
 
 // ==================== ORDER TYPES ====================

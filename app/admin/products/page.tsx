@@ -20,11 +20,14 @@ function AdminProductsContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductCreateRequest>({
     name: '',
     description: '',
     price: 0,
-    stock: 0,
+    stock: undefined,
+    trackInventory: false,
     category: '',
   });
 
@@ -48,11 +51,14 @@ function AdminProductsContent() {
     setEditingProduct(null);
     setImageFiles([]);
     setExistingImageUrls([]);
+    setVideoFile(null);
+    setExistingVideoUrl(null);
     setFormData({
       name: '',
       description: '',
       price: 0,
-      stock: 0,
+      stock: undefined,
+      trackInventory: false,
       category: '',
     });
     setIsModalOpen(true);
@@ -62,11 +68,14 @@ function AdminProductsContent() {
     setEditingProduct(product);
     setImageFiles([]);
     setExistingImageUrls(product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : []);
+    setVideoFile(null);
+    setExistingVideoUrl(product.videoUrl);
     setFormData({
       name: product.name,
       description: product.description,
       price: product.price,
-      stock: product.stock,
+      stock: product.trackInventory ? product.stock : undefined,
+      trackInventory: product.trackInventory,
       category: product.category,
     });
     setIsModalOpen(true);
@@ -76,8 +85,31 @@ function AdminProductsContent() {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value,
+      [name]: type === 'number' ? (value === '' ? undefined : parseFloat(value) || 0) : value,
     }));
+  };
+
+  const handleInventoryToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setFormData((prev) => ({
+      ...prev,
+      trackInventory: checked,
+      stock: checked ? prev.stock ?? 0 : undefined,
+    }));
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] ?? null;
+    setVideoFile(selectedFile);
+  };
+
+  const clearSelectedVideo = () => {
+    setVideoFile(null);
+  };
+
+  const removeExistingVideo = () => {
+    setExistingVideoUrl(null);
+    setVideoFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,18 +128,22 @@ function AdminProductsContent() {
           {
             ...formData,
             imageUrls: existingImageUrls,
+            removeVideo: Boolean(editingProduct?.videoUrl) && !existingVideoUrl && !videoFile,
           },
-          imageFiles.length > 0 ? imageFiles : undefined
+          imageFiles.length > 0 ? imageFiles : undefined,
+          videoFile
         );
         toast.success('Producto actualizado exitosamente');
       } else {
-        await productService.createProduct(formData, imageFiles);
+        await productService.createProduct(formData, imageFiles, videoFile);
         toast.success('Producto creado exitosamente');
       }
 
       setIsModalOpen(false);
       setImageFiles([]);
       setExistingImageUrls([]);
+      setVideoFile(null);
+      setExistingVideoUrl(null);
       await fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -206,6 +242,7 @@ function AdminProductsContent() {
                         </div>
                         <div className="text-xs text-gray-400">
                           {product.imageUrls?.length || (product.imageUrl ? 1 : 0)} fotos
+                          {product.videoUrl ? ' · 1 video' : ''}
                         </div>
                       </div>
                       </div>
@@ -217,9 +254,13 @@ function AdminProductsContent() {
                       {formatPrice(product.price, 'PEN')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'}>
-                        {product.stock} unidades
-                      </Badge>
+                      {product.trackInventory ? (
+                        <Badge variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'}>
+                          {product.stock} unidades
+                        </Badge>
+                      ) : (
+                        <Badge variant="info">Sin control</Badge>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Button variant="ghost" size="sm" onClick={() => openEditModal(product)}>
@@ -279,15 +320,34 @@ function AdminProductsContent() {
               onChange={handleChange}
               required
             />
+            <div className="rounded-lg border border-gray-200 px-4 py-3">
+              <label className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Controlar stock</p>
+                  <p className="text-xs text-gray-500">
+                    Activalo solo si quieres descontar inventario automaticamente.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.trackInventory}
+                  onChange={handleInventoryToggle}
+                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+              </label>
+            </div>
+          </div>
+
+          {formData.trackInventory && (
             <Input
               label="Stock"
               name="stock"
               type="number"
-              value={formData.stock}
+              value={formData.stock ?? ''}
               onChange={handleChange}
               required
             />
-          </div>
+          )}
 
           <Input
             label="Categoria"
@@ -310,6 +370,47 @@ function AdminProductsContent() {
             }
             maxFiles={MAX_PRODUCT_IMAGES}
           />
+
+          <div className="space-y-3 rounded-lg border border-gray-200 p-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Video del Producto</label>
+              <p className="text-xs text-gray-500">
+                Opcional. Sube solo 1 video corto para algunos productos.
+              </p>
+            </div>
+
+            {existingVideoUrl && !videoFile && (
+              <div className="space-y-3 rounded-lg bg-gray-50 p-3">
+                <video
+                  src={existingVideoUrl}
+                  controls
+                  preload="metadata"
+                  className="w-full rounded-lg border border-gray-200 bg-black/80"
+                />
+                <div className="flex justify-end">
+                  <Button type="button" variant="ghost" onClick={removeExistingVideo}>
+                    Quitar video actual
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {videoFile ? (
+              <div className="flex items-center justify-between rounded-lg bg-primary-50 px-3 py-2 text-sm text-primary-900">
+                <span className="truncate">{videoFile.name}</span>
+                <Button type="button" variant="ghost" onClick={clearSelectedVideo}>
+                  Quitar
+                </Button>
+              </div>
+            ) : null}
+
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              onChange={handleVideoChange}
+              className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-primary-700"
+            />
+          </div>
 
           <div className="flex justify-end gap-4 pt-4">
             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>

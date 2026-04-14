@@ -14,21 +14,36 @@ interface ProductDetailProps {
 
 export function ProductDetail({ product }: ProductDetailProps) {
   const defaultSelectedImage = product.imageUrls?.[0] ?? product.imageUrl ?? null;
+  const defaultSelectedMedia =
+    defaultSelectedImage != null
+      ? { type: 'image' as const, url: defaultSelectedImage }
+      : product.videoUrl
+        ? { type: 'video' as const, url: product.videoUrl }
+        : null;
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState<string | null>(defaultSelectedImage);
+  const [selectedMedia, setSelectedMedia] = useState<{
+    type: 'image' | 'video';
+    url: string;
+  } | null>(defaultSelectedMedia);
   const { addItem, getItem } = useCartStore();
   const cartItem = getItem(product.id);
-  const isOutOfStock = product.stock === 0;
-  const maxQuantity = product.stock - (cartItem?.quantity || 0);
+  const isOutOfStock = product.trackInventory && product.stock === 0;
+  const maxQuantity = product.trackInventory
+    ? product.stock - (cartItem?.quantity || 0)
+    : 20;
   const productImages = product.imageUrls?.length
     ? product.imageUrls
     : product.imageUrl
       ? [product.imageUrl]
       : [];
-  const activeImage =
-    selectedImage && productImages.includes(selectedImage)
-      ? selectedImage
-      : defaultSelectedImage;
+  const mediaItems = [
+    ...productImages.map((url) => ({ type: 'image' as const, url })),
+    ...(product.videoUrl ? [{ type: 'video' as const, url: product.videoUrl }] : []),
+  ];
+  const activeMedia =
+    selectedMedia && mediaItems.some((media) => media.type === selectedMedia.type && media.url === selectedMedia.url)
+      ? selectedMedia
+      : defaultSelectedMedia;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -58,13 +73,20 @@ export function ProductDetail({ product }: ProductDetailProps) {
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface-muted shadow-[0_16px_36px_rgba(89,11,49,0.08)]">
-          {activeImage ? (
+          {activeMedia?.type === 'image' ? (
             <Image
-              src={activeImage}
+              src={activeMedia.url}
               alt={product.name}
               fill
               className="object-cover"
               priority
+            />
+          ) : activeMedia?.type === 'video' ? (
+            <video
+              src={activeMedia.url}
+              controls
+              preload="metadata"
+              className="h-full w-full object-contain bg-black"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -93,25 +115,33 @@ export function ProductDetail({ product }: ProductDetailProps) {
           )}
         </div>
 
-        {productImages.length > 1 && (
+        {mediaItems.length > 1 && (
           <div className="grid grid-cols-4 gap-3">
-            {productImages.map((imageUrl, index) => (
+            {mediaItems.map((media, index) => (
               <button
-                key={`${imageUrl}-${index}`}
+                key={`${media.type}-${media.url}-${index}`}
                 type="button"
-                onClick={() => setSelectedImage(imageUrl)}
+                onClick={() => setSelectedMedia(media)}
                 className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${
-                  activeImage === imageUrl
+                  activeMedia?.type === media.type && activeMedia.url === media.url
                     ? 'border-primary-500 ring-2 ring-primary-200'
                     : 'border-border hover:border-primary-300'
                 }`}
               >
-                <Image
-                  src={imageUrl}
-                  alt={`${product.name} ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
+                {media.type === 'image' ? (
+                  <Image
+                    src={media.url}
+                    alt={`${product.name} ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
+                    <svg className="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -131,12 +161,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <span className="text-3xl font-bold text-primary-600">
             {formatPrice(product.price, 'PEN')}
           </span>
-          <Badge
-            variant={
-              product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'
-            }
-          >
-            {product.stock > 0 ? `${product.stock} en stock` : 'Sin stock'}
+          <Badge variant={isOutOfStock ? 'danger' : 'success'}>
+            {isOutOfStock ? 'Sin stock' : 'Disponible'}
           </Badge>
         </div>
 
@@ -200,9 +226,15 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Disponibilidad</dt>
               <dd className="font-medium text-foreground">
-                {product.stock > 0 ? 'En stock' : 'Agotado'}
+                {isOutOfStock ? 'Agotado' : 'Disponible'}
               </dd>
             </div>
+            {product.videoUrl && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Video</dt>
+                <dd className="font-medium text-foreground">Disponible</dd>
+              </div>
+            )}
           </dl>
         </div>
       </div>

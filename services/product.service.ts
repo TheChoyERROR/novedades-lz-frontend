@@ -71,7 +71,7 @@ class ProductService {
         return false;
       }
 
-      if (params.inStock && product.stock <= 0) {
+      if (params.inStock && product.trackInventory && product.stock <= 0) {
         return false;
       }
 
@@ -98,7 +98,11 @@ class ProductService {
     return response.data.data;
   }
 
-  async createProduct(product: ProductCreateRequest, imageFiles?: File[]): Promise<Product> {
+  async createProduct(
+    product: ProductCreateRequest,
+    imageFiles?: File[],
+    videoFile?: File | null
+  ): Promise<Product> {
     if (!imageFiles || imageFiles.length === 0) {
       throw new Error('Selecciona al menos una imagen para el producto');
     }
@@ -108,6 +112,9 @@ class ProductService {
     imageFiles.forEach((imageFile) => {
       formData.append('images', imageFile);
     });
+    if (videoFile) {
+      formData.append('video', videoFile);
+    }
 
     try {
       const response: AxiosResponse<ApiResponse<Product>> = await apiClient.post(
@@ -121,7 +128,12 @@ class ProductService {
     }
   }
 
-  async updateProduct(id: number, product: ProductUpdateRequest, imageFiles?: File[]): Promise<Product> {
+  async updateProduct(
+    id: number,
+    product: ProductUpdateRequest,
+    imageFiles?: File[],
+    videoFile?: File | null
+  ): Promise<Product> {
     const formData = new FormData();
     formData.append('product', JSON.stringify(product));
 
@@ -129,6 +141,9 @@ class ProductService {
       imageFiles.forEach((imageFile) => {
         formData.append('images', imageFile);
       });
+    }
+    if (videoFile) {
+      formData.append('video', videoFile);
     }
 
     try {

@@ -15,7 +15,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem, getItem } = useCartStore();
   const cartItem = getItem(product.id);
-  const isOutOfStock = product.stock === 0;
+  const isOutOfStock = product.trackInventory && product.stock === 0;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -23,7 +23,7 @@ export function ProductCard({ product }: ProductCardProps) {
       return;
     }
 
-    if (cartItem && cartItem.quantity >= product.stock) {
+    if (product.trackInventory && cartItem && cartItem.quantity >= product.stock) {
       toast.error('No hay más stock disponible');
       return;
     }
@@ -62,6 +62,12 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
+          {product.videoUrl && (
+            <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white shadow-sm">
+              Video
+            </span>
+          )}
+
           {/* Out of Stock Badge */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -94,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {formatPrice(product.price, 'PEN')}
           </span>
           <span className="text-sm text-muted-foreground">
-            Stock: {product.stock}
+            {product.trackInventory ? (isOutOfStock ? 'Agotado' : 'Disponible') : 'Disponible'}
           </span>
         </div>
 
