@@ -6,6 +6,7 @@ import { Badge, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
 import { Product } from '@/types';
+import { ProductImageWatermark } from '@/components/products/product-image-watermark';
 import toast from 'react-hot-toast';
 
 interface ProductDetailProps {
@@ -74,13 +75,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface-muted shadow-[0_16px_36px_rgba(89,11,49,0.08)]">
           {activeMedia?.type === 'image' ? (
-            <Image
-              src={activeMedia.url}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
+            <>
+              <Image
+                src={activeMedia.url}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+              <ProductImageWatermark size="lg" />
+            </>
           ) : activeMedia?.type === 'video' ? (
             <video
               src={activeMedia.url}

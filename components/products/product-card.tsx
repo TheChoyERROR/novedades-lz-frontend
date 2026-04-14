@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { Card, CardContent, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
+import { ProductImageWatermark } from '@/components/products/product-image-watermark';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -38,12 +39,15 @@ export function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-square overflow-hidden bg-surface-muted">
           {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+            <>
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <ProductImageWatermark />
+            </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
