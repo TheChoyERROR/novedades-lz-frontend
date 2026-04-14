@@ -7,6 +7,10 @@ import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
 import { Product } from '@/types';
 import { ProductImageWatermark } from '@/components/products/product-image-watermark';
+import {
+  getProtectedCloudinaryImageUrl,
+  shouldUseOverlayWatermarkFallback,
+} from '@/lib/utils/cloudinary-watermark';
 import toast from 'react-hot-toast';
 
 interface ProductDetailProps {
@@ -45,6 +49,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
     selectedMedia && mediaItems.some((media) => media.type === selectedMedia.type && media.url === selectedMedia.url)
       ? selectedMedia
       : defaultSelectedMedia;
+  const activeImageUrl =
+    activeMedia?.type === 'image'
+      ? getProtectedCloudinaryImageUrl(activeMedia.url, 'detail')
+      : null;
+  const showOverlayFallback =
+    activeMedia?.type === 'image'
+      ? shouldUseOverlayWatermarkFallback(activeMedia.url)
+      : false;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -74,16 +86,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface-muted shadow-[0_16px_36px_rgba(89,11,49,0.08)]">
-          {activeMedia?.type === 'image' ? (
+          {activeMedia?.type === 'image' && activeImageUrl ? (
             <>
               <Image
-                src={activeMedia.url}
+                src={activeImageUrl}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
               />
-              <ProductImageWatermark size="lg" />
+              {showOverlayFallback ? <ProductImageWatermark size="lg" /> : null}
             </>
           ) : activeMedia?.type === 'video' ? (
             <video
@@ -134,7 +146,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               >
                 {media.type === 'image' ? (
                   <Image
-                    src={media.url}
+                    src={getProtectedCloudinaryImageUrl(media.url, 'thumb') ?? media.url}
                     alt={`${product.name} ${index + 1}`}
                     fill
                     className="object-cover"

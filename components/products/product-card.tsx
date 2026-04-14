@@ -7,6 +7,10 @@ import { Card, CardContent, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
 import { ProductImageWatermark } from '@/components/products/product-image-watermark';
+import {
+  getProtectedCloudinaryImageUrl,
+  shouldUseOverlayWatermarkFallback,
+} from '@/lib/utils/cloudinary-watermark';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -17,6 +21,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addItem, getItem } = useCartStore();
   const cartItem = getItem(product.id);
   const isOutOfStock = product.trackInventory && product.stock === 0;
+  const displayImageUrl = getProtectedCloudinaryImageUrl(product.imageUrl, 'card');
+  const showOverlayFallback = shouldUseOverlayWatermarkFallback(product.imageUrl);
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -38,15 +44,15 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-square overflow-hidden bg-surface-muted">
-          {product.imageUrl ? (
+          {displayImageUrl ? (
             <>
               <Image
-                src={product.imageUrl}
+                src={displayImageUrl}
                 alt={product.name}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              <ProductImageWatermark />
+              {showOverlayFallback ? <ProductImageWatermark /> : null}
             </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
