@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 
 function AdminProductsContent() {
   const MAX_PRODUCT_IMAGES = 3;
+  const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,6 +101,13 @@ function AdminProductsContent() {
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] ?? null;
+
+    if (selectedFile && selectedFile.size > MAX_VIDEO_SIZE_BYTES) {
+      toast.error('El video no debe superar 50MB');
+      e.target.value = '';
+      return;
+    }
+
     setVideoFile(selectedFile);
   };
 
@@ -375,7 +383,7 @@ function AdminProductsContent() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Video del Producto</label>
               <p className="text-xs text-gray-500">
-                Opcional. Sube solo 1 video corto para algunos productos.
+                Opcional. Sube solo 1 video corto para algunos productos. Maximo 50MB.
               </p>
             </div>
 
