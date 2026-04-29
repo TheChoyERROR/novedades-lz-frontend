@@ -12,15 +12,23 @@ export const cybermomCampaign = {
     'https://wa.me/51939662630?text=Hola%2C%20quiero%20consultar%20por%20las%20promos%20Cybermom%20con%2030%25%20OFF.',
   carouselSlides: [
     {
-      src: '/campaigns/cybermom/carousel/cybermom-regalos-unicos.png',
-      alt: 'Cybermom regalos unicos para mama con 30% de descuento',
+      src: '/campaigns/cybermom/carousel/cybermom-01-fragancias-detalles.png',
+      alt: 'Cybermom fragancias y detalles para mama con 30% de descuento',
     },
     {
-      src: '/campaigns/cybermom/carousel/cybermom-bolsos-carteras.png',
+      src: '/campaigns/cybermom/carousel/cybermom-02-perfumes-sets.png',
+      alt: 'Cybermom perfumes y sets que enamoran a mama',
+    },
+    {
+      src: '/campaigns/cybermom/carousel/cybermom-03-regalos-consentir.png',
+      alt: 'Cybermom regalos especiales para consentir a mama',
+    },
+    {
+      src: '/campaigns/cybermom/carousel/cybermom-04-bolsos-carteras.png',
       alt: 'Cybermom bolsos y carteras para consentir a mama',
     },
     {
-      src: '/campaigns/cybermom/carousel/cybermom-detalles-especiales.png',
+      src: '/campaigns/cybermom/carousel/cybermom-05-detalles-especiales.png',
       alt: 'Cybermom detalles especiales que enamoran a mama',
     },
   ],
