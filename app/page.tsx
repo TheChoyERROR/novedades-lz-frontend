@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { CybermomCarousel } from '@/components/campaigns/cybermom-carousel';
 import { ProductGrid } from '@/components/products';
 import { BackendStatusNotice, buttonClasses } from '@/components/ui';
 import {
@@ -10,6 +11,7 @@ import {
   BACKEND_RETRY_DELAY_MS,
   isBackendUnavailableError,
 } from '@/lib/api/client';
+import { cybermomCampaign, isCybermomCampaignActive } from '@/lib/campaigns/cybermom';
 import { productService } from '@/services/product.service';
 import { Product } from '@/types';
 
@@ -80,6 +82,7 @@ export default function Home() {
 
   const isBackendWarmingUp = loadState === 'warming_up';
   const isGridBusy = isLoading || isBackendWarmingUp;
+  const isCybermomActive = isCybermomCampaignActive();
   const warmupTitle =
     warmupAttempts > 1 ? 'La tienda ya casi esta lista' : 'Estamos conectando con la tienda';
   const warmupMessage =
@@ -87,62 +90,124 @@ export default function Home() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-primary-400 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_36%)]" />
-        <div className="absolute -left-20 top-16 h-56 w-56 rounded-full bg-white/12 blur-3xl" />
-        <div className="absolute -right-12 bottom-0 h-64 w-64 rounded-full bg-primary-200/18 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-5xl text-center">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-              <Image
-                src="/brand/logo.png"
-                alt="Logo de Novedades LZ"
-                width={40}
-                height={40}
-                className="h-10 w-10 object-contain"
-                priority
-              />
-              <span className="text-sm font-medium text-white/90">
-                Casa Grande | Envios rapidos | Atencion por WhatsApp
-              </span>
-            </div>
+      {isCybermomActive ? (
+        <CybermomCarousel />
+      ) : (
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-primary-400 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_36%)]" />
+          <div className="absolute -left-20 top-16 h-56 w-56 rounded-full bg-white/12 blur-3xl" />
+          <div className="absolute -right-12 bottom-0 h-64 w-64 rounded-full bg-primary-200/18 blur-3xl" />
+          <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl text-center">
+              <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
+                <Image
+                  src="/brand/logo.png"
+                  alt="Logo de Novedades LZ"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                  priority
+                />
+                <span className="text-sm font-medium text-white/90">
+                  Casa Grande | Envios rapidos | Atencion por WhatsApp
+                </span>
+              </div>
 
-            <h1 className="mt-8 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Tu tienda con personalidad,
-              <span className="block text-primary-100">
-                novedades y entregas rapidas
-              </span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-xl text-primary-100 sm:text-2xl">
-              Descubre productos utiles y bonitos con una experiencia mas cercana,
-              simple y pensada para comprar sin vueltas.
-            </p>
-            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <Link
-                href="/products"
-                className={buttonClasses({
-                  size: 'lg',
-                  variant: 'outline',
-                  className:
-                    'w-full border-white/40 text-white hover:border-white hover:bg-white/12 hover:text-white sm:w-auto',
-                })}
-              >
-                Ver productos
-              </Link>
-              <Link
-                href="/track-order"
-                className={buttonClasses({
-                  size: 'lg',
-                  variant: 'white',
-                  className: 'w-full sm:w-auto',
-                })}
-              >
-                Rastrear pedido
-              </Link>
+              <h1 className="mt-8 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                Tu tienda con personalidad,
+                <span className="block text-primary-100">
+                  novedades y entregas rapidas
+                </span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-3xl text-xl text-primary-100 sm:text-2xl">
+                Descubre productos utiles y bonitos con una experiencia mas cercana,
+                simple y pensada para comprar sin vueltas.
+              </p>
+              <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/products"
+                  className={buttonClasses({
+                    size: 'lg',
+                    variant: 'outline',
+                    className:
+                      'w-full border-white/40 text-white hover:border-white hover:bg-white/12 hover:text-white sm:w-auto',
+                  })}
+                >
+                  Ver productos
+                </Link>
+                <Link
+                  href="/track-order"
+                  className={buttonClasses({
+                    size: 'lg',
+                    variant: 'white',
+                    className: 'w-full sm:w-auto',
+                  })}
+                >
+                  Rastrear pedido
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {isCybermomActive ? (
+        <section className="border-b border-[#f5c4cc] bg-[#fff5f6] py-14 dark:border-[#4c222b] dark:bg-[#14090c]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-stretch">
+              <div className="rounded-2xl border border-[#f1c2c8] bg-white/74 px-6 py-8 shadow-[0_16px_36px_rgba(205,76,91,0.12)] sm:px-8 dark:border-white/10 dark:bg-[#211015]/86 dark:shadow-[0_16px_36px_rgba(0,0,0,0.24)]">
+                <span className="text-sm font-bold uppercase tracking-[0.24em] text-[#e25664] dark:text-[#ff7a86]">
+                  Especial Dia de la Madre
+                </span>
+                <h2 className="mt-4 text-3xl font-bold text-foreground sm:text-4xl">
+                  Ideas bonitas para regalarle a mama
+                </h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
+                  {cybermomCampaign.catalogIntro}
+                </p>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Link href="/products" className={buttonClasses({ size: 'md' })}>
+                    Comprar Cybermom
+                  </Link>
+                  <a
+                    href={cybermomCampaign.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonClasses({
+                      size: 'md',
+                      variant: 'outline',
+                      className:
+                        'border-[#eeb4bc] bg-white/80 text-[#8e3340] hover:border-[#e25664] hover:bg-white hover:text-[#6f2730] dark:border-white/12 dark:bg-[#211015]/70 dark:text-[#ffc6cc] dark:hover:border-[#ff7a86] dark:hover:bg-[#2a1318] dark:hover:text-white',
+                    })}
+                  >
+                    Pedir recomendacion
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                {[
+                  ['30% OFF', 'Promocion activa en todo el catalogo.'],
+                  ['Hasta el 10/05', 'Aprovecha la campana antes del Dia de la Madre.'],
+                  ['WhatsApp', 'Te ayudamos a elegir y confirmar stock rapido.'],
+                ].map(([title, description]) => (
+                  <div
+                    key={title}
+                    className="rounded-2xl border border-[#f1c2c8] bg-white/74 px-5 py-5 shadow-sm dark:border-white/10 dark:bg-[#211015]/86"
+                  >
+                    <p className="text-2xl font-bold text-[#b74450] dark:text-[#ff7a86]">
+                      {title}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

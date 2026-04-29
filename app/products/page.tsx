@@ -5,6 +5,7 @@ import { Product } from '@/types';
 import { productService } from '@/services/product.service';
 import { ProductFilters, ProductGrid } from '@/components/products';
 import { BackendStatusNotice, Button } from '@/components/ui';
+import { cybermomCampaign, isCybermomCampaignActive } from '@/lib/campaigns/cybermom';
 import {
   ApiAvailabilityState,
   BACKEND_RETRY_DELAY_MS,
@@ -169,6 +170,7 @@ export default function ProductsPage() {
 
   const isBackendWarmingUp = loadState === 'warming_up';
   const isGridBusy = isLoading || isBackendWarmingUp;
+  const isCybermomActive = isCybermomCampaignActive();
   const warmupTitle =
     warmupAttempts > 1 ? 'El catalogo ya casi esta disponible' : 'Estamos conectando con el catalogo';
 
@@ -177,9 +179,41 @@ export default function ProductsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Nuestros Productos</h1>
         <p className="mt-2 text-gray-600">
-          Explora nuestra seleccion de productos de calidad
+          {isCybermomActive
+            ? `${cybermomCampaign.name}: ${cybermomCampaign.discountLabel} en todos los productos hasta el 10 de mayo`
+            : 'Explora nuestra seleccion de productos de calidad'}
         </p>
       </div>
+
+      {isCybermomActive ? (
+        <div className="mb-8 overflow-hidden rounded-2xl border border-[#f3bcc4] bg-[#ffe7eb] text-[#3b211b] shadow-[0_18px_42px_rgba(205,76,91,0.14)] dark:border-[#4c222b] dark:bg-[#17090d] dark:text-[#fff1f3] dark:shadow-[0_18px_42px_rgba(0,0,0,0.28)]">
+          <div className="relative px-6 py-7 sm:px-8">
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.86),rgba(255,211,217,0.76),rgba(255,239,241,0.92))] dark:bg-[linear-gradient(135deg,rgba(42,19,24,0.94),rgba(65,27,34,0.82),rgba(23,9,13,0.96))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(226,86,100,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(226,86,100,0.12)_1px,transparent_1px)] bg-[size:38px_38px] opacity-35 dark:opacity-20" />
+            <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <span className="inline-flex rounded-full bg-[#e25664] px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white dark:bg-[#ff7a86] dark:text-[#19090d]">
+                  {cybermomCampaign.name}
+                </span>
+                <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
+                  {cybermomCampaign.discountLabel} por Dia de la Madre
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6f4540] dark:text-[#f4b6bd]">
+                  {cybermomCampaign.catalogIntro}
+                </p>
+              </div>
+              <a
+                href={cybermomCampaign.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-lg border border-[#3b211b] bg-[#3b211b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:border-[#2a1713] hover:bg-[#2a1713] dark:border-[#ff7a86] dark:bg-[#ff7a86] dark:text-[#19090d] dark:hover:border-[#ff98a1] dark:hover:bg-[#ff98a1]"
+              >
+                Consultar promo
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mb-8">
         <ProductFilters

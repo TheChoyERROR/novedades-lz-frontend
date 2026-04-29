@@ -7,6 +7,7 @@ import { Card, CardContent, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
 import { ProductImageWatermark } from '@/components/products/product-image-watermark';
+import { cybermomCampaign, isCybermomCampaignActive } from '@/lib/campaigns/cybermom';
 import {
   getProtectedCloudinaryImageUrl,
   shouldUseOverlayWatermarkFallback,
@@ -23,6 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = product.trackInventory && product.stock === 0;
   const displayImageUrl = getProtectedCloudinaryImageUrl(product.imageUrl, 'card');
   const showOverlayFallback = shouldUseOverlayWatermarkFallback(product.imageUrl);
+  const showCybermomPromo = isCybermomCampaignActive();
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -72,8 +74,18 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
+          {showCybermomPromo ? (
+            <span className="absolute right-2 top-2 rounded-full bg-[#e25664] px-2.5 py-1 text-xs font-bold text-white shadow-sm dark:bg-[#ff7a86] dark:text-[#19090d]">
+              {cybermomCampaign.cardBadge}
+            </span>
+          ) : null}
+
           {product.videoUrl && (
-            <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white shadow-sm">
+            <span
+              className={`absolute right-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white shadow-sm ${
+                showCybermomPromo ? 'top-10' : 'top-2'
+              }`}
+            >
               Video
             </span>
           )}
@@ -88,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Category Badge */}
-          <span className="absolute left-2 top-2 rounded-full bg-primary-600 px-2 py-1 text-xs text-white shadow-sm">
+          <span className="absolute left-2 top-2 max-w-[calc(100%-8.5rem)] truncate rounded-full bg-primary-600 px-2 py-1 text-xs text-white shadow-sm">
             {product.category}
           </span>
         </div>
@@ -113,6 +125,12 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.trackInventory ? (isOutOfStock ? 'Agotado' : 'Disponible') : 'Disponible'}
           </span>
         </div>
+
+        {showCybermomPromo ? (
+          <p className="mt-2 text-xs font-semibold text-[#b74450] dark:text-[#ff8d98]">
+            {cybermomCampaign.discountLabel} Cybermom hasta el 10 de mayo
+          </p>
+        ) : null}
 
         <Button
           className="w-full mt-4"
