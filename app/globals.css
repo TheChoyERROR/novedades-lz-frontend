@@ -224,6 +224,40 @@ textarea::placeholder {
   animation: slideIn 0.3s ease-out forwards;
 }
 
+@keyframes cybermomHeartBurst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0) scale(0.7) rotate(0deg);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translate3d(var(--heart-mid-drift), 10vh, 0) scale(1) rotate(var(--heart-mid-rotate));
+  }
+
+  70% {
+    opacity: 0.9;
+    transform: translate3d(var(--heart-late-drift), 74vh, 0) scale(0.94) rotate(var(--heart-late-rotate));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--heart-drift), calc(100vh + 90px), 0) scale(0.75) rotate(var(--heart-rotate));
+  }
+}
+
+.cybermom-heart-burst {
+  animation: cybermomHeartBurst var(--heart-duration, 2600ms) ease-out var(--heart-delay, 0ms) forwards;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cybermom-heart-burst {
+    display: none;
+  }
+}
+
 .Toastify__toast {
   border-radius: 0.5rem;
 }
