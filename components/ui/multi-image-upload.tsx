@@ -28,7 +28,7 @@ export function MultiImageUpload({
   disabled = false,
   label = 'Fotos del Producto',
   helperText,
-  maxFiles = 3,
+  maxFiles = 20,
   className,
 }: MultiImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);

@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
 function AdminProductsContent() {
-  const MAX_PRODUCT_IMAGES = 3;
+  const MAX_PRODUCT_IMAGES = 20;
   const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
