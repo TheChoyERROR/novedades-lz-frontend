@@ -119,7 +119,8 @@ class ProductService {
     try {
       const response: AxiosResponse<ApiResponse<Product>> = await apiClient.post(
         this.BASE_URL,
-        formData
+        formData,
+        { timeout: 180000 }
       );
       return response.data.data;
     } catch (error: unknown) {
@@ -149,7 +150,8 @@ class ProductService {
     try {
       const response: AxiosResponse<ApiResponse<Product>> = await apiClient.put(
         `${this.BASE_URL}/${id}`,
-        formData
+        formData,
+        { timeout: 180000 }
       );
       return response.data.data;
     } catch (error: unknown) {
