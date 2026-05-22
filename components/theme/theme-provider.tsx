@@ -14,7 +14,6 @@ export type Theme = 'light' | 'dark';
 const THEME_STORAGE_KEY = 'novedades-theme';
 
 interface ThemeContextValue {
-  isReady: boolean;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -44,29 +43,41 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => resolveInitialTheme());
+  const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
-    applyTheme(theme);
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    const resolved = resolveInitialTheme();
+    setThemeState(resolved);
+    applyTheme(resolved);
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === 'dark' || stored === 'light') {
+      applyTheme(stored);
+    }
   }, [theme]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
+    applyTheme(nextTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+    setThemeState((currentTheme) => {
+      const next = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+      return next;
+    });
   }, []);
 
-  const value = {
-    isReady: true,
-    theme,
-    setTheme,
-    toggleTheme,
-  };
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

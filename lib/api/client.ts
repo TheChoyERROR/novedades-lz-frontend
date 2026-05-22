@@ -2,10 +2,9 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { clearStoredAuthState, getStoredAuthToken } from '@/lib/auth/storage';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  (process.env.NODE_ENV === 'development' ? 'http://localhost:8080/api' : '');
+  process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
 
-if (!API_BASE_URL && process.env.NODE_ENV !== 'development') {
+if (!API_BASE_URL) {
   console.error('Missing NEXT_PUBLIC_API_BASE_URL for production frontend build');
 }
 

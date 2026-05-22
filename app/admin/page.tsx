@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth';
 import { Card, CardContent, CardHeader, Spinner } from '@/components/ui';
+import { SiteSettings } from '@/components/admin/site-settings';
 import { productService } from '@/services/product.service';
 import { orderService } from '@/services/order.service';
 import { formatPrice } from '@/lib/utils/format';
@@ -132,7 +133,11 @@ function AdminDashboardContent() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="mb-8">
+        <SiteSettings />
+      </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-gray-900">Gestion de Productos</h2>

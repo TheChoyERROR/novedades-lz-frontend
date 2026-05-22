@@ -6,8 +6,8 @@ import { Product } from '@/types';
 import { Card, CardContent, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
+import { useSiteStore } from '@/stores/site-store';
 import { ProductImageWatermark } from '@/components/products/product-image-watermark';
-import { cybermomCampaign, isCybermomCampaignActive } from '@/lib/campaigns/cybermom';
 import {
   getProtectedCloudinaryImageUrl,
   shouldUseOverlayWatermarkFallback,
@@ -20,11 +20,12 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem, getItem } = useCartStore();
+  const { campaign } = useSiteStore();
   const cartItem = getItem(product.id);
   const isOutOfStock = product.trackInventory && product.stock === 0;
   const displayImageUrl = getProtectedCloudinaryImageUrl(product.imageUrl, 'card');
   const showOverlayFallback = shouldUseOverlayWatermarkFallback(product.imageUrl);
-  const showCybermomPromo = isCybermomCampaignActive();
+  const showCampaignPromo = campaign.enabled && campaign.cardBadge;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -43,7 +44,6 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="group overflow-hidden">
-      {/* Product Image */}
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-square overflow-hidden bg-surface-muted">
           {displayImageUrl ? (
@@ -74,23 +74,22 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
-          {showCybermomPromo ? (
-            <span className="absolute right-2 top-2 rounded-full bg-[#e25664] px-2.5 py-1 text-xs font-bold text-white shadow-sm dark:bg-[#ff7a86] dark:text-[#19090d]">
-              {cybermomCampaign.cardBadge}
+          {showCampaignPromo ? (
+            <span className="absolute right-2 top-2 rounded-full bg-primary-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+              {campaign.cardBadge}
             </span>
           ) : null}
 
           {product.videoUrl && (
             <span
               className={`absolute right-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white shadow-sm ${
-                showCybermomPromo ? 'top-10' : 'top-2'
+                showCampaignPromo ? 'top-10' : 'top-2'
               }`}
             >
               Video
             </span>
           )}
 
-          {/* Out of Stock Badge */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">
@@ -99,7 +98,6 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
-          {/* Category Badge */}
           <span className="absolute left-2 top-2 max-w-[calc(100%-8.5rem)] truncate rounded-full bg-primary-600 px-2 py-1 text-xs text-white shadow-sm">
             {product.category}
           </span>
@@ -126,9 +124,9 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {showCybermomPromo ? (
-          <p className="mt-2 text-xs font-semibold text-[#b74450] dark:text-[#ff8d98]">
-            {cybermomCampaign.discountLabel} Cybermom hasta el 10 de mayo
+        {showCampaignPromo && campaign.discountLabel ? (
+          <p className="mt-2 text-xs font-semibold text-primary-600">
+            {campaign.discountLabel} {campaign.name}
           </p>
         ) : null}
 

@@ -3,8 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { CybermomCarousel } from '@/components/campaigns/cybermom-carousel';
-import { CybermomHeartBurst } from '@/components/campaigns/cybermom-heart-burst';
+import { HeroCarousel } from '@/components/campaigns/hero-carousel';
 import { ProductGrid } from '@/components/products';
 import { BackendStatusNotice, buttonClasses } from '@/components/ui';
 import {
@@ -12,7 +11,8 @@ import {
   BACKEND_RETRY_DELAY_MS,
   isBackendUnavailableError,
 } from '@/lib/api/client';
-import { isCybermomCampaignActive } from '@/lib/campaigns/cybermom';
+import { useSiteStore } from '@/stores/site-store';
+import { getCarouselSlides } from '@/lib/campaigns/campaign-config';
 import { productService } from '@/services/product.service';
 import { Product } from '@/types';
 
@@ -22,6 +22,8 @@ export default function Home() {
   const [loadState, setLoadState] = useState<ApiAvailabilityState>('loading');
   const [retryTick, setRetryTick] = useState(0);
   const [warmupAttempts, setWarmupAttempts] = useState(0);
+  const { carousel } = useSiteStore();
+  const hasCarousel = getCarouselSlides(carousel).length > 0;
 
   useEffect(() => {
     let isCancelled = false;
@@ -83,7 +85,6 @@ export default function Home() {
 
   const isBackendWarmingUp = loadState === 'warming_up';
   const isGridBusy = isLoading || isBackendWarmingUp;
-  const isCybermomActive = isCybermomCampaignActive();
   const warmupTitle =
     warmupAttempts > 1 ? 'La tienda ya casi esta lista' : 'Estamos conectando con la tienda';
   const warmupMessage =
@@ -91,11 +92,8 @@ export default function Home() {
 
   return (
     <div>
-      {isCybermomActive ? (
-        <>
-          <CybermomHeartBurst />
-          <CybermomCarousel />
-        </>
+      {hasCarousel ? (
+        <HeroCarousel />
       ) : (
         <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-primary-400 text-white">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.22),transparent_36%)]" />
