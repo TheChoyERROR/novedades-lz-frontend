@@ -38,28 +38,27 @@ export function HeroCarousel() {
   };
 
   return (
-    <section className="relative w-full">
-      <div className="relative w-full" style={{ maxHeight: '80vh' }}>
+    <section className="relative w-full overflow-hidden">
+      <div className="relative aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9]">
         {slides.map((slide, index) => (
           <Image
             key={slide.src}
             src={slide.src}
             alt={slide.alt}
-            width={1916}
-            height={821}
+            fill
             priority={index === 0}
             sizes="100vw"
-            className={`w-full h-auto transition-opacity duration-700 ${
-              index === activeIndex ? 'opacity-100' : 'opacity-0 absolute inset-0'
+            className={`object-cover transition-opacity duration-700 ${
+              index === activeIndex ? 'opacity-100' : 'opacity-0'
             }`}
           />
         ))}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 
         <div className="absolute inset-x-0 bottom-0 z-10 pb-6 pt-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <Link
                 href="/products"
                 className={buttonClasses({
