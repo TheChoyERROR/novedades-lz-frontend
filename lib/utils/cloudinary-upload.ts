@@ -28,7 +28,7 @@ export function getOptimizedCarouselUrl(url: string): string {
 
   const prefix = url.slice(0, uploadIndex + uploadMarker.length);
   const suffix = url.slice(uploadIndex + uploadMarker.length);
-  const transformation = 'f_auto,q_auto';
+  const transformation = 'f_auto,q_auto,c_fill,w_1920,h_760,g_auto';
 
   return `${prefix}${transformation}/${suffix}`;
 }

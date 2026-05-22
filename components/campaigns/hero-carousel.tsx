@@ -39,7 +39,7 @@ export function HeroCarousel() {
 
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9]">
+      <div className="relative aspect-video">
         {slides.map((slide, index) => (
           <Image
             key={slide.src}
@@ -56,9 +56,9 @@ export function HeroCarousel() {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 
-        <div className="absolute inset-x-0 bottom-0 z-10 pb-6 pt-16">
+        <div className="absolute inset-x-0 bottom-0 z-10 pb-8 pt-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center">
               <Link
                 href="/products"
                 className={buttonClasses({
@@ -74,7 +74,7 @@ export function HeroCarousel() {
 
         {slides.length > 1 && (
           <div
-            className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2"
+            className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5"
             aria-label="Selector de imagenes"
           >
             {slides.map((_, index) => (
@@ -86,7 +86,7 @@ export function HeroCarousel() {
                 onClick={() => setActiveIndex(index)}
                 className={`h-2 rounded-full transition-all duration-200 ${
                   index === activeIndex
-                    ? 'w-6 bg-white'
+                    ? 'w-5 bg-white'
                     : 'w-2 bg-white/60 hover:bg-white/80'
                 }`}
               />
