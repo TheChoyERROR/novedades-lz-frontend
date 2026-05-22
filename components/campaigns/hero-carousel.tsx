@@ -38,25 +38,26 @@ export function HeroCarousel() {
   };
 
   return (
-    <section className="relative">
-      <div className="relative h-[50vh] min-h-[320px] sm:h-[60vh] md:h-[70vh] lg:h-[80vh]">
+    <section className="relative w-full">
+      <div className="relative w-full" style={{ maxHeight: '80vh' }}>
         {slides.map((slide, index) => (
           <Image
             key={slide.src}
             src={slide.src}
             alt={slide.alt}
-            fill
+            width={1916}
+            height={821}
             priority={index === 0}
             sizes="100vw"
-            className={`object-cover transition-opacity duration-700 ${
-              index === activeIndex ? 'opacity-100' : 'opacity-0'
+            className={`w-full h-auto transition-opacity duration-700 ${
+              index === activeIndex ? 'opacity-100' : 'opacity-0 absolute inset-0'
             }`}
           />
         ))}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-        <div className="absolute inset-x-0 bottom-0 z-10 pb-8 pt-20">
+        <div className="absolute inset-x-0 bottom-0 z-10 pb-6 pt-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-4">
               <Link
@@ -74,7 +75,7 @@ export function HeroCarousel() {
 
         {slides.length > 1 && (
           <div
-            className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2"
+            className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2"
             aria-label="Selector de imagenes"
           >
             {slides.map((_, index) => (
