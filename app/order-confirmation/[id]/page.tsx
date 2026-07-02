@@ -69,7 +69,7 @@ export default function OrderConfirmationPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Pedido Recibido</h1>
         <p className="mt-4 text-lg text-gray-600">
-          Gracias por tu compra. Te hemos enviado los detalles por correo.
+          Gracias por tu compra. Guarda el numero de tu pedido para hacer seguimiento.
         </p>
       </div>
 

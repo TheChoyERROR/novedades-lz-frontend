@@ -17,10 +17,37 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/products' },
-    { name: 'Carrito', href: '/cart' },
+    { name: 'Rastrear pedido', href: '/track-order' },
   ];
+
+  const cartItemsLabel = totalItems === 1 ? '1 producto' : `${totalItems} productos`;
+  const cartLink = (
+    <Link
+      href="/cart"
+      aria-label={totalItems > 0 ? `Ver carrito, ${cartItemsLabel}` : 'Ver carrito'}
+      className={cn(
+        'relative inline-flex h-11 w-11 items-center justify-center rounded-full border shadow-sm transition-colors',
+        pathname === '/cart'
+          ? 'border-primary-400 bg-primary-50 text-primary-600'
+          : 'border-border bg-surface text-foreground hover:border-primary-300 hover:bg-primary-50 hover:text-primary-600'
+      )}
+    >
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+        />
+      </svg>
+      {totalItems > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-600 px-1 text-sm font-bold text-white shadow-sm">
+          {totalItems}
+        </span>
+      )}
+    </Link>
+  );
 
   const adminNavigation = [
     { name: 'Dashboard', href: '/admin' },
@@ -70,18 +97,7 @@ export function Header() {
                     : 'text-muted-foreground hover:text-primary-600'
                 )}
               >
-                {item.name === 'Carrito' ? (
-                  <span className="relative">
-                    {item.name}
-                    {totalItems > 0 && (
-                      <span className="absolute -right-4 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
-                        {totalItems}
-                      </span>
-                    )}
-                  </span>
-                ) : (
-                  item.name
-                )}
+                {item.name}
               </Link>
             ))}
 
@@ -103,6 +119,7 @@ export function Header() {
           </div>
 
           <div className="hidden md:flex md:items-center md:space-x-3">
+            {cartLink}
             <ThemeToggle />
             {isAuthenticated ? (
               <>
@@ -129,6 +146,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
+            {cartLink}
             <ThemeToggle />
             <button
               type="button"
@@ -175,11 +193,19 @@ export function Header() {
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.name === 'Carrito' && totalItems > 0
-                    ? `${item.name} (${totalItems})`
-                    : item.name}
+                  {item.name}
                 </Link>
               ))}
+              <Link
+                href="/cart"
+                className={cn(
+                  'text-sm font-medium transition-colors',
+                  pathname === '/cart' ? 'text-primary-600' : 'text-muted-foreground'
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {totalItems > 0 ? `Carrito (${totalItems})` : 'Carrito'}
+              </Link>
 
               {isAdmin &&
                 adminNavigation.map((item) => (

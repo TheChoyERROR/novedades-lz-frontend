@@ -48,7 +48,16 @@ export function CartSummary() {
               <h2 className="text-lg font-semibold text-gray-900">
                 Carrito de Compras ({totalItems} {totalItems === 1 ? 'item' : 'items'})
               </h2>
-              <Button variant="ghost" size="sm" onClick={clearCart} className="text-red-600">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm('¿Seguro que quieres quitar todos los productos del carrito?')) {
+                    clearCart();
+                  }
+                }}
+                className="text-red-600"
+              >
                 Vaciar Carrito
               </Button>
             </div>
@@ -90,7 +99,7 @@ export function CartSummary() {
               href="/checkout"
               className={buttonClasses({ size: 'lg', className: 'w-full' })}
             >
-              Proceder al Pago
+              Ir a pagar
             </Link>
           </CardFooter>
         </Card>

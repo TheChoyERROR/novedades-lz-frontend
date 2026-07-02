@@ -32,7 +32,7 @@ export function CartItem({ item }: CartItemProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0">
+    <div className="flex flex-wrap items-center gap-4 py-4 border-b border-gray-100 last:border-0">
       {/* Product Image */}
       <Link href={`/products/${product.id}`} className="flex-shrink-0">
         <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
@@ -76,21 +76,23 @@ export function CartItem({ item }: CartItemProps) {
       </div>
 
       {/* Quantity Controls */}
-      <div className="flex items-center border border-gray-300 rounded-lg">
+      <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
         <button
           onClick={handleDecrement}
           disabled={quantity <= 1}
-          className="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Quitar uno"
+          className="h-11 w-11 text-xl font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           -
         </button>
-        <span className="px-3 py-1 border-x border-gray-300 min-w-[40px] text-center text-sm">
+        <span className="h-11 min-w-[48px] flex items-center justify-center border-x border-gray-300 px-2 text-base font-semibold">
           {quantity}
         </span>
         <button
           onClick={handleIncrement}
           disabled={product.trackInventory && quantity >= product.stock}
-          className="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Agregar uno"
+          className="h-11 w-11 text-xl font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           +
         </button>
@@ -108,10 +110,11 @@ export function CartItem({ item }: CartItemProps) {
         variant="ghost"
         size="sm"
         onClick={handleRemove}
+        aria-label={`Eliminar ${product.name} del carrito`}
         className="text-red-600 hover:text-red-700 hover:bg-red-50"
       >
         <svg
-          className="h-5 w-5"
+          className="h-5 w-5 mr-1"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -123,6 +126,7 @@ export function CartItem({ item }: CartItemProps) {
             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
           />
         </svg>
+        Eliminar
       </Button>
     </div>
   );
