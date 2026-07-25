@@ -12,9 +12,27 @@ const inter = Inter({
 
 /**
  * Base para resolver las URLs relativas de metadata a absolutas. Sin esto, og:image y og:url
- * salen relativos y WhatsApp no muestra previsualizacion al compartir un producto.
+ * salen relativos y WhatsApp no muestra previsualizacion al compartir.
+ *
+ * El respaldo usa la variable que Vercel inyecta sola en cada despliegue. Antes era un dominio
+ * escrito a mano que no existia, asi que si NEXT_PUBLIC_SITE_URL faltaba se generaba una
+ * previsualizacion con una imagen rota, sin ningun error visible.
  */
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://novedadeslz.vercel.app';
+function resolveSiteUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, '');
+  }
+
+  const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelDomain) {
+    return `https://${vercelDomain}`;
+  }
+
+  return 'http://localhost:3000';
+}
+
+const siteUrl = resolveSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
