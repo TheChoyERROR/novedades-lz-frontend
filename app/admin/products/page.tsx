@@ -193,9 +193,29 @@ function AdminProductsContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Gestion de Productos</h1>
-        <Button onClick={openCreateModal}>+ Nuevo Producto</Button>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* Administrar el catalogo es donde uno espera encontrar la descarga, mas que en el
+              dashboard. El PDF se arma con los precios en vivo al momento de descargarlo. */}
+          <a href="/catalogo/pdf" className="sm:shrink-0">
+            <Button variant="outline" className="w-full gap-2 sm:w-auto">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                />
+              </svg>
+              Descargar catalogo PDF
+            </Button>
+          </a>
+          <Button onClick={openCreateModal} className="w-full sm:w-auto">
+            + Nuevo Producto
+          </Button>
+        </div>
       </div>
 
       <Card>
