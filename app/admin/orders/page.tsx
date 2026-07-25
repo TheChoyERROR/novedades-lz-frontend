@@ -7,6 +7,7 @@ import { orderService } from '@/services/order.service';
 import { Badge, Button, Card, CardContent, Modal, Select, Spinner } from '@/components/ui';
 import { formatDateTime, formatPrice } from '@/lib/utils/format';
 import { adminOrderFilterOptions, orderStatusConfig } from '@/lib/utils/order-status';
+import { fulfillmentLabel, isPickupOrder } from '@/lib/orders/fulfillment';
 import toast from 'react-hot-toast';
 
 function AdminOrdersContent() {
@@ -198,7 +199,7 @@ function AdminOrdersContent() {
                       <div className="text-sm text-gray-500">{formatDateTime(order.createdAt)}</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="font-medium uppercase text-gray-900">{order.paymentMethod}</div>
+                      <div className="font-medium text-gray-900">{fulfillmentLabel(order.paymentMethod)}</div>
                       <div>{order.paymentProof ? 'Con comprobante' : 'Sin comprobante'}</div>
                       <div>{order.operationNumber ? `Op: ${order.operationNumber}` : 'Op: pendiente'}</div>
                     </td>
@@ -248,7 +249,9 @@ function AdminOrdersContent() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-sm text-gray-500">Metodo de pago</p>
-                <p className="font-medium uppercase text-gray-900">{selectedOrder.paymentMethod}</p>
+                <p className="font-medium text-gray-900">
+                  {isPickupOrder(selectedOrder.paymentMethod) ? 'Efectivo en tienda' : 'Yape'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total</p>
@@ -257,9 +260,13 @@ function AdminOrdersContent() {
             </div>
 
             <div>
-              <p className="mb-2 text-sm text-gray-500">Direccion de envio</p>
+              <p className="mb-2 text-sm text-gray-500">Entrega</p>
               <p className="font-medium text-gray-900">
-                {[selectedOrder.customerAddress, selectedOrder.customerCity].filter(Boolean).join(', ')}
+                {isPickupOrder(selectedOrder.paymentMethod)
+                  ? 'Recojo en tienda (paga en efectivo al retirar)'
+                  : [selectedOrder.customerAddress, selectedOrder.customerCity]
+                      .filter(Boolean)
+                      .join(', ')}
               </p>
             </div>
 

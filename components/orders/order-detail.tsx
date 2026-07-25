@@ -4,6 +4,7 @@ import { Order, OrderStatus } from '@/types';
 import { Badge, Card, CardContent, CardHeader } from '@/components/ui';
 import { formatDateTime, formatPrice } from '@/lib/utils/format';
 import { orderStatusConfig } from '@/lib/utils/order-status';
+import { fulfillmentLabel, isPickupOrder } from '@/lib/orders/fulfillment';
 import { PaymentProofCard } from './payment-proof-card';
 
 interface OrderDetailProps {
@@ -81,8 +82,8 @@ export function OrderDetail({ order, onOrderUpdated, accessToken }: OrderDetailP
                   <dd className="font-medium">{formatPrice(order.total, 'PEN')}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Envio</dt>
-                  <dd className="text-green-600 font-medium">Gratis</dd>
+                  <dt className="text-gray-500">Entrega</dt>
+                  <dd className="font-medium text-green-600">{fulfillmentLabel(order.paymentMethod)}</dd>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-3">
                   <dt className="text-lg font-semibold text-gray-900">Total</dt>
@@ -96,11 +97,15 @@ export function OrderDetail({ order, onOrderUpdated, accessToken }: OrderDetailP
 
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">Direccion de Envio</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {isPickupOrder(order.paymentMethod) ? 'Entrega' : 'Direccion de Envio'}
+              </h2>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                {[order.customerAddress, order.customerCity].filter(Boolean).join(', ')}
+                {isPickupOrder(order.paymentMethod)
+                  ? 'Recojo en tienda. Coordina por WhatsApp cuando pasas por el local.'
+                  : [order.customerAddress, order.customerCity].filter(Boolean).join(', ')}
               </p>
             </CardContent>
           </Card>

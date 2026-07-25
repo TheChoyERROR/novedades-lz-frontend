@@ -7,14 +7,8 @@ import { orderService } from '@/services/order.service';
 import { rememberOrderToken } from '@/lib/orders/order-access';
 import { Button, Card, CardContent, CardFooter, Input, Select } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
+import { fulfillmentOptions, requiresShippingAddress, YAPE } from '@/lib/orders/fulfillment';
 import toast from 'react-hot-toast';
-
-// Solo los metodos que la tienda realmente atiende. Plin se ofrecia en el formulario pero no
-// tenia soporte aguas abajo: quien lo elegia no recibia ninguna instruccion de pago.
-const paymentMethods = [
-  { value: 'yape', label: 'Yape' },
-  { value: 'cash', label: 'Contra Entrega (Efectivo)' },
-];
 
 interface CheckoutFormData {
   customerName: string;
@@ -35,9 +29,11 @@ export function CheckoutForm() {
     customerEmail: '',
     customerAddress: '',
     customerCity: '',
-    paymentMethod: 'yape',
+    paymentMethod: YAPE,
   });
   const [errors, setErrors] = useState<Partial<CheckoutFormData>>({});
+
+  const needsAddress = requiresShippingAddress(formData.paymentMethod);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<CheckoutFormData> = {};
@@ -59,12 +55,14 @@ export function CheckoutForm() {
       newErrors.customerEmail = 'Ingresa un email valido';
     }
 
-    if (!formData.customerAddress.trim()) {
-      newErrors.customerAddress = 'La direccion es requerida';
-    }
+    if (needsAddress) {
+      if (!formData.customerAddress.trim()) {
+        newErrors.customerAddress = 'La direccion es requerida';
+      }
 
-    if (!formData.customerCity.trim()) {
-      newErrors.customerCity = 'La ciudad es requerida';
+      if (!formData.customerCity.trim()) {
+        newErrors.customerCity = 'La ciudad es requerida';
+      }
     }
 
     setErrors(newErrors);
@@ -96,8 +94,8 @@ export function CheckoutForm() {
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
         customerEmail: formData.customerEmail.trim() || undefined,
-        customerAddress: formData.customerAddress,
-        customerCity: formData.customerCity,
+        customerAddress: needsAddress ? formData.customerAddress : undefined,
+        customerCity: needsAddress ? formData.customerCity : undefined,
         paymentMethod: formData.paymentMethod,
         items: items.map((item) => ({
           productId: item.product.id,
@@ -131,6 +129,39 @@ export function CheckoutForm() {
     <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
+          {/* Va primero: la eleccion define que datos se le piden despues. */}
+          <Card>
+            <CardContent>
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                Como quieres recibir tu pedido
+              </h2>
+
+              <Select
+                label="Elige una opcion"
+                name="paymentMethod"
+                options={fulfillmentOptions}
+                value={formData.paymentMethod}
+                onChange={handleChange}
+              />
+
+              <div className="mt-4 rounded-lg bg-primary-50 p-4">
+                <p className="text-sm text-primary-800">
+                  {needsAddress ? (
+                    <>
+                      <strong>Pago por Yape.</strong> Al terminar podras subir la captura de tu
+                      pago y te avisamos por WhatsApp cuando lo confirmemos.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Pagas al recoger.</strong> Escribenos por WhatsApp con tu numero de
+                      pedido y coordinamos cuando pasas por el local.
+                    </>
+                  )}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
@@ -172,7 +203,8 @@ export function CheckoutForm() {
             </CardContent>
           </Card>
 
-          <Card>
+          {needsAddress ? (
+            <Card>
             <CardContent>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Direccion de Envio
@@ -198,30 +230,8 @@ export function CheckoutForm() {
                 />
               </div>
             </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent>
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Metodo de Pago
-              </h2>
-
-              <Select
-                label="Selecciona metodo de pago"
-                name="paymentMethod"
-                options={paymentMethods}
-                value={formData.paymentMethod}
-                onChange={handleChange}
-              />
-
-              <div className="mt-4 p-4 bg-primary-50 rounded-lg">
-                <p className="text-sm text-primary-800">
-                  <strong>Nota:</strong> Despues de realizar el pedido, te contactaremos
-                  por WhatsApp para confirmar el pago y coordinar el envio.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </Card>
+          ) : null}
         </div>
 
         <div className="lg:col-span-1">
@@ -248,8 +258,10 @@ export function CheckoutForm() {
                   <span>{formatPrice(totalAmount, 'PEN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Envio</span>
-                  <span className="text-green-600">Gratis</span>
+                  <span>{needsAddress ? 'Envio' : 'Entrega'}</span>
+                  <span className="text-green-600">
+                    {needsAddress ? 'Gratis' : 'Recojo en tienda'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">
                   <span>Total</span>
@@ -265,7 +277,7 @@ export function CheckoutForm() {
                 isLoading={isLoading}
                 disabled={isLoading}
               >
-                Confirmar Pedido
+                {needsAddress ? 'Confirmar Pedido' : 'Reservar para recojo'}
               </Button>
             </CardFooter>
           </Card>

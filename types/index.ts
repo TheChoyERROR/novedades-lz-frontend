@@ -120,8 +120,9 @@ export interface OrderCreateRequest {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
-  customerAddress: string;
-  customerCity: string;
+  /** Opcional: los pedidos de recojo en tienda no la necesitan. */
+  customerAddress?: string;
+  customerCity?: string;
   paymentMethod: string;
   notes?: string;
   items: OrderItemRequest[];
