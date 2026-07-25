@@ -52,6 +52,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 src={displayImageUrl}
                 alt={product.name}
                 fill
+                // Sin esto Next asume 100vw y descarga una imagen de ancho completo para una
+                // celda de ~170px. Los valores siguen los breakpoints del grid.
+                sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               {showOverlayFallback ? <ProductImageWatermark /> : null}
@@ -92,34 +95,38 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">
+              <span className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white sm:px-4 sm:py-2 sm:text-base">
                 Agotado
               </span>
             </div>
           )}
 
-          <span className="absolute left-2 top-2 max-w-[calc(100%-8.5rem)] truncate rounded-full bg-primary-600 px-2 py-1 text-xs text-white shadow-sm">
+          <span className="absolute left-1.5 top-1.5 max-w-[60%] truncate rounded-full bg-primary-600 px-2 py-0.5 text-[10px] text-white shadow-sm sm:left-2 sm:top-2 sm:px-2 sm:py-1 sm:text-xs">
             {product.category}
           </span>
         </div>
       </Link>
 
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <Link href={`/products/${product.id}`}>
           <h3 className="line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary-600">
             {product.name}
           </h3>
         </Link>
 
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-          {product.description}
-        </p>
+        {/* line-clamp-2 tambien define display, asi que pelea con `hidden` en el mismo elemento:
+            el contenedor decide la visibilidad y el parrafo solo recorta el texto. */}
+        <div className="hidden md:block">
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            {product.description}
+          </p>
+        </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-xl font-bold text-primary-600">
+        <div className="mt-3 flex flex-col gap-0.5 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+          <span className="text-lg font-bold text-primary-600 sm:text-xl">
             {formatPrice(product.price, 'PEN')}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs text-muted-foreground sm:text-sm">
             {product.trackInventory ? (isOutOfStock ? 'Agotado' : 'Disponible') : 'Disponible'}
           </span>
         </div>
@@ -131,12 +138,17 @@ export function ProductCard({ product }: ProductCardProps) {
         ) : null}
 
         <Button
-          className="w-full mt-4"
+          className="mt-3 w-full px-2 text-sm sm:mt-4 sm:text-base"
           variant={isOutOfStock ? 'secondary' : 'primary'}
           disabled={isOutOfStock}
           onClick={handleAddToCart}
         >
-          {isOutOfStock ? 'Sin Stock' : 'Agregar al Carrito'}
+          {isOutOfStock ? 'Sin stock' : (
+            <>
+              <span className="sm:hidden">Agregar</span>
+              <span className="hidden sm:inline">Agregar al Carrito</span>
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>

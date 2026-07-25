@@ -10,6 +10,7 @@ import { Badge, Button, Card, CardContent, LoadingScreen } from '@/components/ui
 import { formatDateTime, formatPrice } from '@/lib/utils/format';
 import { PaymentProofCard } from '@/components/orders';
 import { orderStatusConfig } from '@/lib/utils/order-status';
+import { isPickupOrder, WHATSAPP_URL } from '@/lib/orders/fulfillment';
 
 function OrderConfirmationPageContent() {
   const params = useParams();
@@ -128,22 +129,57 @@ function OrderConfirmationPageContent() {
 
           <div className="bg-primary-50 rounded-lg p-4">
             <h3 className="font-semibold text-primary-900 mb-2">Proximos Pasos:</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
-              <li>
-                Anota tu numero de pedido <strong>{order.orderNumber}</strong>: con el y tu telefono
-                puedes consultar el estado cuando quieras
-              </li>
-              <li>Realiza el pago segun el metodo seleccionado</li>
-              <li>Si elegiste Yape, sube tu captura desde esta misma pagina</li>
-              <li>Revisaremos el comprobante manualmente antes de confirmar</li>
-              <li>Tu pedido sera enviado en 24-48 horas luego de la aprobacion</li>
-            </ol>
+            {isPickupOrder(order.paymentMethod) ? (
+              <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
+                <li>
+                  Anota tu numero de pedido <strong>{order.orderNumber}</strong>: lo necesitas para
+                  recoger y para consultar el estado
+                </li>
+                <li>Escribenos por WhatsApp para coordinar cuando pasas por el local</li>
+                <li>Pagas en efectivo al recoger tu pedido</li>
+              </ol>
+            ) : (
+              <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
+                <li>
+                  Anota tu numero de pedido <strong>{order.orderNumber}</strong>: con el y tu
+                  telefono puedes consultar el estado cuando quieras
+                </li>
+                <li>Yapea el total del pedido</li>
+                <li>Sube tu captura desde esta misma pagina</li>
+                <li>Revisaremos el comprobante manualmente antes de confirmar</li>
+                <li>Tu pedido sera enviado en 24-48 horas luego de la aprobacion</li>
+              </ol>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <div className="mt-8">
-        <PaymentProofCard order={order} onOrderUpdated={setOrder} accessToken={accessToken} />
+        {isPickupOrder(order.paymentMethod) ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <h2 className="text-lg font-semibold text-gray-900">Coordina tu recojo</h2>
+              <p className="mt-2 text-gray-600">
+                Escribenos por WhatsApp indicando tu numero de pedido{' '}
+                <strong>{order.orderNumber}</strong> y coordinamos cuando pasas por el local.
+              </p>
+              <a
+                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                  `Hola, quiero coordinar el recojo de mi pedido ${order.orderNumber}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block"
+              >
+                <Button className="bg-green-500 hover:bg-green-600">
+                  Escribir por WhatsApp
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        ) : (
+          <PaymentProofCard order={order} onOrderUpdated={setOrder} accessToken={accessToken} />
+        )}
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
