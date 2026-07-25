@@ -61,7 +61,10 @@ export function ProductGrid({
 
   return (
     <div
-      className={`grid grid-cols-1 gap-6 transition-opacity duration-300 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
+      // 2 columnas desde el celular: con una sola el cliente veia ~1.5 productos por pantalla.
+      // Es el patron que usan Falabella, Ripley o Shein, y en un catalogo de novedades la compra
+      // depende de cuantos productos alcanza a ver sin scrollear.
+      className={`grid grid-cols-2 gap-3 transition-opacity duration-300 sm:gap-6 md:grid-cols-3 xl:grid-cols-4 ${
         isLoading ? 'pointer-events-none opacity-50' : 'opacity-100'
       }`}
     >
