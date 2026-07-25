@@ -9,9 +9,10 @@ import { PaymentProofCard } from './payment-proof-card';
 interface OrderDetailProps {
   order: Order;
   onOrderUpdated?: (order: Order) => void;
+  accessToken?: string | null;
 }
 
-export function OrderDetail({ order, onOrderUpdated }: OrderDetailProps) {
+export function OrderDetail({ order, onOrderUpdated, accessToken }: OrderDetailProps) {
   const status = orderStatusConfig[order.status];
 
   return (
@@ -20,7 +21,7 @@ export function OrderDetail({ order, onOrderUpdated }: OrderDetailProps) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Pedido #{order.id}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
               <p className="text-gray-500 mt-1">Realizado el {formatDateTime(order.createdAt)}</p>
             </div>
             <Badge variant={status.variant} size="md">
@@ -30,7 +31,12 @@ export function OrderDetail({ order, onOrderUpdated }: OrderDetailProps) {
         </CardHeader>
       </Card>
 
-      <PaymentProofCard order={order} onOrderUpdated={onOrderUpdated} allowUpload={false} />
+      <PaymentProofCard
+        order={order}
+        onOrderUpdated={onOrderUpdated}
+        allowUpload={false}
+        accessToken={accessToken}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

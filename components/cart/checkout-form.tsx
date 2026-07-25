@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
 import { orderService } from '@/services/order.service';
+import { rememberOrderToken } from '@/lib/orders/order-access';
 import { Button, Card, CardContent, CardFooter, Input, Select } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
@@ -103,9 +104,15 @@ export function CheckoutForm() {
       };
 
       const order = await orderService.createOrder(orderData);
+      // El token es la unica forma de volver a este pedido: se guarda antes de navegar.
+      rememberOrderToken(order.id, order.publicToken);
       clearCart();
       toast.success('Pedido creado exitosamente');
-      router.push(`/order-confirmation/${order.id}`);
+      router.push(
+        order.publicToken
+          ? `/order-confirmation/${order.id}?token=${encodeURIComponent(order.publicToken)}`
+          : `/order-confirmation/${order.id}`
+      );
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Error al procesar el pedido. Intenta de nuevo.');

@@ -22,9 +22,22 @@ class OrderService {
     return response.data.data;
   }
 
-  async getOrderById(id: number): Promise<Order> {
+  /**
+   * `token` es obligatorio para clientes. Un admin autenticado puede omitirlo: el backend
+   * autoriza por rol.
+   */
+  async getOrderById(id: number, token?: string | null): Promise<Order> {
     const response: AxiosResponse<ApiResponse<Order>> = await apiClient.get(
-      `${this.BASE_URL}/${id}`
+      `${this.BASE_URL}/${id}`,
+      { params: token ? { token } : undefined }
+    );
+    return response.data.data;
+  }
+
+  async trackOrder(orderNumber: string, customerPhone: string): Promise<Order> {
+    const response: AxiosResponse<ApiResponse<Order>> = await apiClient.post(
+      `${this.BASE_URL}/track`,
+      { orderNumber, customerPhone }
     );
     return response.data.data;
   }
@@ -45,7 +58,7 @@ class OrderService {
     return response.data.data;
   }
 
-  async uploadYapeProof(id: number, proof: File): Promise<Order> {
+  async uploadYapeProof(id: number, proof: File, token?: string | null): Promise<Order> {
     const formData = new FormData();
     formData.append('proof', proof);
 
@@ -53,6 +66,7 @@ class OrderService {
       `${this.BASE_URL}/${id}/yape-proof`,
       formData,
       {
+        params: token ? { token } : undefined,
         headers: {
           'Content-Type': 'multipart/form-data',
         },

@@ -1,16 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Order } from '@/types';
 import { orderService } from '@/services/order.service';
+import { rememberOrderToken, resolveOrderToken } from '@/lib/orders/order-access';
 import { OrderDetail } from '@/components/orders';
 import { Button, LoadingScreen } from '@/components/ui';
 
-export default function OrderDetailPage() {
+function OrderDetailPageContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderId = Number(params.id);
+  const tokenFromUrl = searchParams.get('token');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,8 +28,18 @@ export default function OrderDetailPage() {
         return;
       }
 
+      const token = resolveOrderToken(orderId, tokenFromUrl);
+      setAccessToken(token);
+
+      if (!token) {
+        setError('Necesitamos verificar que este pedido es tuyo');
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const orderData = await orderService.getOrderById(orderId);
+        const orderData = await orderService.getOrderById(orderId, token);
+        rememberOrderToken(orderId, orderData.publicToken ?? token);
         setOrder(orderData);
       } catch (error) {
         console.error('Error fetching order:', error);
@@ -35,8 +49,8 @@ export default function OrderDetailPage() {
       }
     };
 
-    fetchOrder();
-  }, [orderId]);
+    void fetchOrder();
+  }, [orderId, tokenFromUrl]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -63,7 +77,8 @@ export default function OrderDetailPage() {
             {error || 'Pedido no encontrado'}
           </h2>
           <p className="mt-2 text-gray-600">
-            El pedido que buscas no existe o no tienes acceso a él.
+            El pedido que buscas no existe, o este enlace no acredita que sea tuyo. Buscalo con su
+            numero y el telefono con el que lo registraste.
           </p>
           <Link href="/track-order" className="inline-block mt-6">
             <Button>Buscar Otro Pedido</Button>
@@ -90,11 +105,19 @@ export default function OrderDetailPage() {
             </Link>
           </li>
           <li className="text-gray-400">/</li>
-          <li className="text-gray-900 font-medium">Pedido #{order.id}</li>
+          <li className="text-gray-900 font-medium">{order.orderNumber}</li>
         </ol>
       </nav>
 
-        <OrderDetail order={order} onOrderUpdated={setOrder} />
+        <OrderDetail order={order} onOrderUpdated={setOrder} accessToken={accessToken} />
       </div>
+  );
+}
+
+export default function OrderDetailPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <OrderDetailPageContent />
+    </Suspense>
   );
 }

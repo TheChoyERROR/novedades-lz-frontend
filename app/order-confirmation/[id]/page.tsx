@@ -1,18 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Order } from '@/types';
 import { orderService } from '@/services/order.service';
+import { rememberOrderToken, resolveOrderToken } from '@/lib/orders/order-access';
 import { Badge, Button, Card, CardContent, LoadingScreen } from '@/components/ui';
 import { formatDateTime, formatPrice } from '@/lib/utils/format';
 import { PaymentProofCard } from '@/components/orders';
 import { orderStatusConfig } from '@/lib/utils/order-status';
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationPageContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderId = Number(params.id);
+  const tokenFromUrl = searchParams.get('token');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,8 +28,18 @@ export default function OrderConfirmationPage() {
         return;
       }
 
+      // Recien salido del checkout el token viene en la URL; al volver mas tarde, del storage.
+      const token = resolveOrderToken(orderId, tokenFromUrl);
+      setAccessToken(token);
+
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const orderData = await orderService.getOrderById(orderId);
+        const orderData = await orderService.getOrderById(orderId, token);
+        rememberOrderToken(orderId, orderData.publicToken ?? token);
         setOrder(orderData);
       } catch (error) {
         console.error('Error fetching order:', error);
@@ -35,7 +49,7 @@ export default function OrderConfirmationPage() {
     };
 
     void fetchOrder();
-  }, [orderId]);
+  }, [orderId, tokenFromUrl]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -46,9 +60,18 @@ export default function OrderConfirmationPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900">No se encontro el pedido</h2>
-          <Link href="/" className="inline-block mt-6">
-            <Button>Volver al Inicio</Button>
-          </Link>
+          <p className="mt-2 text-gray-600">
+            El enlace puede haber expirado o abrirse desde otro dispositivo. Busca tu pedido con su
+            numero y tu telefono.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/track-order">
+              <Button>Rastrear mi pedido</Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline">Volver al Inicio</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -69,7 +92,7 @@ export default function OrderConfirmationPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Pedido Recibido</h1>
         <p className="mt-4 text-lg text-gray-600">
-          Gracias por tu compra. Te hemos enviado los detalles por correo.
+          Gracias por tu compra. Guarda tu numero de pedido para hacerle seguimiento.
         </p>
       </div>
 
@@ -77,7 +100,7 @@ export default function OrderConfirmationPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Pedido #{order.id}</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{order.orderNumber}</h2>
               <p className="text-gray-500">{formatDateTime(order.createdAt)}</p>
             </div>
             <Badge variant={orderStatusConfig[order.status].variant}>
@@ -106,6 +129,10 @@ export default function OrderConfirmationPage() {
           <div className="bg-primary-50 rounded-lg p-4">
             <h3 className="font-semibold text-primary-900 mb-2">Proximos Pasos:</h3>
             <ol className="list-decimal list-inside space-y-2 text-sm text-primary-800">
+              <li>
+                Anota tu numero de pedido <strong>{order.orderNumber}</strong>: con el y tu telefono
+                puedes consultar el estado cuando quieras
+              </li>
               <li>Realiza el pago segun el metodo seleccionado</li>
               <li>Si elegiste Yape, sube tu captura desde esta misma pagina</li>
               <li>Revisaremos el comprobante manualmente antes de confirmar</li>
@@ -116,11 +143,11 @@ export default function OrderConfirmationPage() {
       </Card>
 
       <div className="mt-8">
-        <PaymentProofCard order={order} onOrderUpdated={setOrder} />
+        <PaymentProofCard order={order} onOrderUpdated={setOrder} accessToken={accessToken} />
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-        <Link href={`/orders/${order.id}`}>
+        <Link href={`/orders/${order.id}?token=${encodeURIComponent(accessToken ?? '')}`}>
           <Button variant="outline">Ver Detalles del Pedido</Button>
         </Link>
         <Link href="/products">
@@ -140,5 +167,13 @@ export default function OrderConfirmationPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <OrderConfirmationPageContent />
+    </Suspense>
   );
 }
