@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth';
-import { Card, CardContent, CardHeader, Spinner } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, Spinner } from '@/components/ui';
 import { SiteSettings } from '@/components/admin/site-settings';
 import { productService } from '@/services/product.service';
 import { orderService } from '@/services/order.service';
@@ -63,7 +63,24 @@ function AdminDashboardContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Panel de Administracion</h1>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Panel de Administracion</h1>
+
+        {/* El PDF se arma con los precios en vivo, asi que nunca queda desactualizado. */}
+        <a href="/catalogo/pdf" className="sm:shrink-0">
+          <Button variant="outline" className="w-full gap-2 sm:w-auto">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+              />
+            </svg>
+            Descargar catalogo PDF
+          </Button>
+        </a>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
