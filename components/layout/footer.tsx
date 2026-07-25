@@ -6,23 +6,23 @@ export function Footer() {
 
   return (
     <footer className="bg-[var(--footer-background)] text-[var(--footer-foreground)]">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          <div className="col-span-1 md:col-span-2">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4 md:gap-8">
+          <div className="col-span-2">
             <Link href="/" className="inline-flex items-center">
               <Image
                 src="/brand/logo.png"
                 alt="Logo de Novedades LZ"
                 width={168}
                 height={168}
-                className="h-auto w-32 object-contain sm:w-36"
+                className="h-auto w-24 object-contain sm:w-36"
               />
             </Link>
-            <p className="mt-4 max-w-md text-sm leading-7 text-white/72">
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/72 sm:mt-4 sm:leading-7">
               Tu tienda de confianza para encontrar productos utiles, bonitos y con
               atencion cercana desde Casa Grande para todo el pais.
             </p>
-            <div className="mt-6 flex space-x-4">
+            <div className="mt-4 flex space-x-3 sm:mt-6 sm:space-x-4">
               <a
                 href="https://www.facebook.com/novedadeslz"
                 target="_blank"
@@ -49,14 +49,14 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-white/80">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80 sm:text-sm sm:tracking-[0.22em]">
               Enlaces rapidos
             </h3>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
               <li>
                 <Link
                   href="/products"
-                  className="text-white/66 transition-colors hover:text-primary-300"
+                  className="text-sm text-white/66 transition-colors hover:text-primary-300 sm:text-base"
                 >
                   Productos
                 </Link>
@@ -64,7 +64,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/cart"
-                  className="text-white/66 transition-colors hover:text-primary-300"
+                  className="text-sm text-white/66 transition-colors hover:text-primary-300 sm:text-base"
                 >
                   Carrito
                 </Link>
@@ -72,7 +72,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/track-order"
-                  className="text-white/66 transition-colors hover:text-primary-300"
+                  className="text-sm text-white/66 transition-colors hover:text-primary-300 sm:text-base"
                 >
                   Rastrear pedido
                 </Link>
@@ -81,18 +81,18 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-white/80">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80 sm:text-sm sm:tracking-[0.22em]">
               Contacto
             </h3>
-            <ul className="mt-4 space-y-3 text-white/66">
-              <li>Casa Grande</li>
-              <li>+51 939 662 630</li>
+            <ul className="mt-3 space-y-2 text-white/66 sm:mt-4 sm:space-y-3">
+              <li className="text-sm sm:text-base">Casa Grande</li>
+              <li className="text-sm sm:text-base">+51 939 662 630</li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-8">
-          <p className="text-center text-sm text-white/56">
+        <div className="mt-8 border-t border-white/10 pt-6 sm:mt-12 sm:pt-8">
+          <p className="text-center text-xs text-white/56 sm:text-sm">
             © {currentYear} Novedades LZ. Todos los derechos reservados.
           </p>
         </div>
