@@ -9,9 +9,10 @@ import { Button, Card, CardContent, CardFooter, Input, Select } from '@/componen
 import { formatPrice } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
+// Solo los metodos que la tienda realmente atiende. Plin se ofrecia en el formulario pero no
+// tenia soporte aguas abajo: quien lo elegia no recibia ninguna instruccion de pago.
 const paymentMethods = [
   { value: 'yape', label: 'Yape' },
-  { value: 'plin', label: 'Plin' },
   { value: 'cash', label: 'Contra Entrega (Efectivo)' },
 ];
 

@@ -121,9 +121,6 @@ export function Header() {
                 >
                   Iniciar sesion
                 </Link>
-                <Link href="/register" className={buttonClasses({ size: 'sm' })}>
-                  Registrarse
-                </Link>
               </>
             )}
           </div>
@@ -230,13 +227,6 @@ export function Header() {
                       })}
                     >
                       Iniciar sesion
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={buttonClasses({ size: 'sm', className: 'w-full' })}
-                    >
-                      Registrarse
                     </Link>
                   </div>
                 )}

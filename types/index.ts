@@ -32,12 +32,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  password: string;
-  email: string;
-  fullName: string;
-  phone?: string;
-}
 
 export interface AuthResponse {
   success: boolean;

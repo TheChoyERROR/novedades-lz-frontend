@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api/client';
-import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, User } from '@/types';
+import { ApiResponse, AuthResponse, LoginRequest, User } from '@/types';
 import { AxiosResponse } from 'axios';
 
 class AuthService {
@@ -13,13 +13,6 @@ class AuthService {
     return response.data;
   }
 
-  async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response: AxiosResponse<AuthResponse> = await apiClient.post(
-      `${this.BASE_URL}/register`,
-      userData
-    );
-    return response.data;
-  }
 
   async getCurrentUser(): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await apiClient.get(`${this.BASE_URL}/me`);

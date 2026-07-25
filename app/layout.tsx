@@ -10,7 +10,14 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
+/**
+ * Base para resolver las URLs relativas de metadata a absolutas. Sin esto, og:image y og:url
+ * salen relativos y WhatsApp no muestra previsualizacion al compartir un producto.
+ */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://novedadeslz.vercel.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Novedades LZ - Tu tienda de confianza',
   description:
     'Encuentra los mejores productos con calidad garantizada y envio rapido a todo el pais.',
@@ -23,6 +30,16 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'es_PE',
     siteName: 'Novedades LZ',
+    // Sin imagen, compartir el enlace de la tienda por WhatsApp mostraba solo texto plano.
+    // Las paginas de producto sobrescriben esto con la foto del producto.
+    images: [{ url: '/brand/logo.png', width: 1200, height: 630, alt: 'Novedades LZ' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Novedades LZ - Tu tienda de confianza',
+    description:
+      'Encuentra los mejores productos con calidad garantizada y envio rapido a todo el pais.',
+    images: ['/brand/logo.png'],
   },
 };
 

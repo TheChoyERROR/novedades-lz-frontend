@@ -1,182 +1,76 @@
-'use client';
-
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Product } from '@/types';
-import { productService } from '@/services/product.service';
+import { notFound } from 'next/navigation';
 import { ProductDetail, ProductGrid } from '@/components/products';
-import {
-  ApiAvailabilityState,
-  BACKEND_RETRY_DELAY_MS,
-  isBackendUnavailableError,
-} from '@/lib/api/client';
-import { BackendStatusNotice, Button } from '@/components/ui';
+import { getProductById, getRelatedProducts } from '@/lib/api/server';
+import { formatPrice } from '@/lib/utils/format';
+import { getOpenGraphImageUrl, OG_IMAGE_SIZE } from '@/lib/utils/og-image';
 
-export default function ProductDetailPage() {
-  const params = useParams();
-  const productId = Number(params.id);
+/**
+ * Esta pagina se renderiza en el servidor y se regenera cada pocos minutos.
+ *
+ * Antes era un componente de cliente: el HTML llegaba vacio y los datos se pedian desde el
+ * navegador. Eso significaba que compartir un producto por WhatsApp no mostraba ninguna
+ * previsualizacion (los rastreadores no ejecutan JavaScript) y que cada visita esperaba a Render.
+ * Ahora el HTML llega completo desde el CDN de Vercel y el backend solo se consulta al regenerar.
+ */
+// Next analiza este valor estaticamente, asi que tiene que ser un literal (5 minutos).
+export const revalidate = 300;
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadState, setLoadState] = useState<ApiAvailabilityState>('loading');
-  const [error, setError] = useState<string | null>(null);
-  const [retryTick, setRetryTick] = useState(0);
-  const [warmupAttempts, setWarmupAttempts] = useState(0);
+interface ProductPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  useEffect(() => {
-    let isCancelled = false;
-    let retryTimeout: number | undefined;
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(Number(id));
 
-    const fetchProduct = async () => {
-      if (!productId || isNaN(productId)) {
-        setError('Producto no encontrado');
-        setLoadState('error');
-        setIsLoading(false);
-        return;
-      }
+  if (!product) {
+    return { title: 'Producto no encontrado | Novedades LZ' };
+  }
 
-      setIsLoading(true);
-      setLoadState((current) => (current === 'warming_up' ? current : 'loading'));
-      setError(null);
+  const title = `${product.name} | Novedades LZ`;
+  const price = formatPrice(product.price, 'PEN');
+  const description = product.description?.trim()
+    ? `${price} - ${product.description.trim().slice(0, 150)}`
+    : `${product.name} por ${price} en Novedades LZ. Envio rapido y atencion por WhatsApp.`;
 
-      try {
-        const productData = await productService.getProductById(productId);
-        if (isCancelled) {
-          return;
-        }
+  const ogImage = getOpenGraphImageUrl(product.imageUrl);
 
-        setProduct(productData);
-
-        // Fetch related products from same category
-        if (productData.category) {
-          try {
-            const related = await productService.getProductsByCategory(
-              encodeURIComponent(productData.category),
-              { page: 0, size: 4 }
-            );
-            setRelatedProducts(
-              related.content.filter((p: Product) => p.id !== productId).slice(0, 4)
-            );
-          } catch {
-            // console.warn('Failed to load related products:', relatedError);
-            // Don't fail the whole page if related products fail
-          }
-        }
-        setLoadState('ready');
-        setWarmupAttempts(0);
-      } catch (error) {
-        if (isCancelled) {
-          return;
-        }
-
-        console.error('Error fetching product:', error);
-
-        if (isBackendUnavailableError(error)) {
-          setLoadState('warming_up');
-          setWarmupAttempts((current) => current + 1);
-          retryTimeout = window.setTimeout(() => {
-            setRetryTick((current) => current + 1);
-          }, BACKEND_RETRY_DELAY_MS);
-          return;
-        }
-
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-          setError('Producto no encontrado');
-        } else {
-          setError('No se pudo cargar el producto');
-        }
-
-        setLoadState('error');
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchProduct();
-
-    return () => {
-      isCancelled = true;
-
-      if (retryTimeout) {
-        window.clearTimeout(retryTimeout);
-      }
-    };
-  }, [productId, retryTick]);
-
-  const handleRetry = () => {
-    setWarmupAttempts(0);
-    setLoadState('loading');
-    setRetryTick((current) => current + 1);
+  return {
+    title,
+    description,
+    alternates: { canonical: `/products/${product.id}` },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: 'es_PE',
+      siteName: 'Novedades LZ',
+      url: `/products/${product.id}`,
+      images: ogImage ? [{ url: ogImage, ...OG_IMAGE_SIZE, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
+    },
   };
+}
 
-  if (isLoading || loadState === 'warming_up') {
-    const title =
-      warmupAttempts > 1
-        ? 'El producto ya casi esta listo'
-        : 'Estamos conectando con la ficha del producto';
+export default async function ProductDetailPage({ params }: ProductPageProps) {
+  const { id } = await params;
+  const product = await getProductById(Number(id));
 
-    return (
-      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center px-4 py-16 sm:px-6 lg:px-8">
-        <BackendStatusNotice
-          className="w-full"
-          title={title}
-          message="Si el backend estaba inactivo, puede tardar unos segundos en arrancar. Seguimos intentando por ti."
-          onRetry={handleRetry}
-        />
-      </div>
-    );
+  if (!product) {
+    notFound();
   }
 
-  if (error || !product) {
-    const isNotFound = error === 'Producto no encontrado';
-
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {isNotFound ? (
-          <div className="text-center">
-            <svg
-              className="mx-auto h-16 w-16 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">{error}</h2>
-            <p className="mt-2 text-gray-600">
-              El producto que buscas no existe o fue eliminado.
-            </p>
-            <Link href="/products" className="mt-6 inline-block">
-              <Button>Ver Todos los Productos</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-3xl">
-            <BackendStatusNotice
-              variant="error"
-              title="No pudimos cargar el producto"
-              message="Puedes intentar otra vez en un momento. Si el backend se estaba reactivando, normalmente entra en el siguiente intento."
-              onRetry={handleRetry}
-            />
-          </div>
-        )}
-      </div>
-    );
-  }
+  const relatedProducts = await getRelatedProducts(product);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
       <nav className="mb-8">
         <ol className="flex items-center space-x-2 text-sm">
           <li>
@@ -191,24 +85,42 @@ export default function ProductDetailPage() {
             </Link>
           </li>
           <li className="text-gray-400">/</li>
-          <li className="text-gray-900 font-medium truncate max-w-xs">
-            {product.name}
-          </li>
+          <li className="text-gray-900 font-medium truncate max-w-xs">{product.name}</li>
         </ol>
       </nav>
 
-      {/* Product Detail */}
       <ProductDetail product={product} />
 
-      {/* Related Products */}
       {relatedProducts.length > 0 && (
         <section className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Productos Relacionados
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Productos Relacionados</h2>
           <ProductGrid products={relatedProducts} />
         </section>
       )}
+
+      {/* Datos estructurados para que Google muestre precio y disponibilidad en los resultados. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.name,
+            description: product.description ?? undefined,
+            image: product.imageUrls?.length ? product.imageUrls : undefined,
+            category: product.category ?? undefined,
+            offers: {
+              '@type': 'Offer',
+              price: product.price,
+              priceCurrency: 'PEN',
+              availability:
+                product.trackInventory && product.stock <= 0
+                  ? 'https://schema.org/OutOfStock'
+                  : 'https://schema.org/InStock',
+            },
+          }),
+        }}
+      />
     </div>
   );
 }
