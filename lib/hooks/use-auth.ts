@@ -49,7 +49,12 @@ export function useAuth() {
 
         try {
           logout();
-          toast.error('Sesion expirada. Por favor inicia sesion nuevamente.');
+
+          // Solo avisar en el panel admin; a un visitante de la tienda no le
+          // interesa que su sesion vieja haya expirado
+          if (window.location.pathname.startsWith('/admin')) {
+            toast.error('Sesion expirada. Por favor inicia sesion nuevamente.');
+          }
         } catch (logoutError) {
           console.error('Session logout error:', logoutError);
         }

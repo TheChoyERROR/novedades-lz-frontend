@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { CartBar } from '@/components/cart/cart-bar';
 import { Header } from './header';
 import { Footer } from './footer';
 
@@ -38,6 +39,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       />
       <Header />
       <main className="flex-1">{children}</main>
+      <CartBar />
       <Footer />
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Badge, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
@@ -18,6 +19,7 @@ interface ProductDetailProps {
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
+  const router = useRouter();
   const defaultSelectedImage = product.imageUrls?.[0] ?? product.imageUrl ?? null;
   const defaultSelectedMedia =
     defaultSelectedImage != null
@@ -58,20 +60,30 @@ export function ProductDetail({ product }: ProductDetailProps) {
       ? shouldUseOverlayWatermarkFallback(activeMedia.url)
       : false;
 
-  const handleAddToCart = () => {
+  const addCurrentQuantity = (): boolean => {
     if (isOutOfStock) {
       toast.error('Producto agotado');
-      return;
+      return false;
     }
 
     if (quantity > maxQuantity) {
       toast.error(`Solo quedan ${maxQuantity} unidades disponibles`);
-      return;
+      return false;
     }
 
     addItem(product, quantity);
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!addCurrentQuantity()) return;
     toast.success(`${quantity} x ${product.name} agregado al carrito`);
     setQuantity(1);
+  };
+
+  const handleBuyNow = () => {
+    if (!addCurrentQuantity()) return;
+    router.push('/checkout');
   };
 
   const decrementQuantity = () => {
@@ -214,15 +226,27 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </div>
         )}
 
-        <Button
-          size="lg"
-          className="w-full"
-          variant={isOutOfStock ? 'secondary' : 'primary'}
-          disabled={isOutOfStock}
-          onClick={handleAddToCart}
-        >
-          {isOutOfStock ? 'Sin stock' : 'Agregar al carrito'}
-        </Button>
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="w-full"
+            variant={isOutOfStock ? 'secondary' : 'primary'}
+            disabled={isOutOfStock}
+            onClick={handleBuyNow}
+          >
+            {isOutOfStock ? 'Sin stock' : 'Comprar ahora'}
+          </Button>
+          {!isOutOfStock && (
+            <Button
+              size="lg"
+              className="w-full"
+              variant="outline"
+              onClick={handleAddToCart}
+            >
+              Agregar al carrito y seguir viendo
+            </Button>
+          )}
+        </div>
 
         <div className="mt-8 border-t border-border pt-6">
           <h3 className="mb-4 font-semibold text-foreground">

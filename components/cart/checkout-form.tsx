@@ -52,9 +52,10 @@ export function CheckoutForm() {
       newErrors.customerPhone = 'Ingresa un telefono valido';
     }
 
-    if (!formData.customerEmail.trim()) {
-      newErrors.customerEmail = 'El email es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
+    if (
+      formData.customerEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)
+    ) {
       newErrors.customerEmail = 'Ingresa un email valido';
     }
 
@@ -94,7 +95,7 @@ export function CheckoutForm() {
       const orderData = {
         customerName: formData.customerName,
         customerPhone: formData.customerPhone,
-        customerEmail: formData.customerEmail,
+        customerEmail: formData.customerEmail.trim() || undefined,
         customerAddress: formData.customerAddress,
         customerCity: formData.customerCity,
         paymentMethod: formData.paymentMethod,
@@ -158,13 +159,13 @@ export function CheckoutForm() {
                   />
 
                   <Input
-                    label="Correo Electronico"
+                    label="Correo Electronico (opcional)"
                     name="customerEmail"
                     type="email"
                     value={formData.customerEmail}
                     onChange={handleChange}
                     error={errors.customerEmail}
-                    placeholder="correo@ejemplo.com"
+                    placeholder="Puedes dejarlo vacio"
                   />
                 </div>
               </div>

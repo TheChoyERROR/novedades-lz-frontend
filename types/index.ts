@@ -119,7 +119,7 @@ export interface OrderItem {
 export interface OrderCreateRequest {
   customerName: string;
   customerPhone: string;
-  customerEmail: string;
+  customerEmail?: string;
   customerAddress: string;
   customerCity: string;
   paymentMethod: string;

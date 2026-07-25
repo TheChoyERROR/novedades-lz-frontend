@@ -105,9 +105,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (shouldResetSessionOnAuthError(error)) {
-      if (typeof window !== 'undefined') {
-        clearStoredAuthState();
+    if (shouldResetSessionOnAuthError(error) && typeof window !== 'undefined') {
+      // Un token vencido solo debe limpiar la sesion guardada; la tienda es
+      // publica y el visitante sigue navegando. Solo el panel admin obliga login.
+      clearStoredAuthState();
+
+      if (window.location.pathname.startsWith('/admin')) {
         window.location.href = '/login';
       }
     }
