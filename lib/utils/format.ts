@@ -1,5 +1,11 @@
-export const formatPrice = (price: number, currency: string = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
+/**
+ * La tienda vende en Peru y en soles. Con el locale en-US, Intl imprimia "PEN 25.90" en vez de
+ * "S/ 25.90" en cada precio del sitio, y las fechas salian en ingles.
+ */
+const LOCALE = 'es-PE';
+
+export const formatPrice = (price: number, currency: string = 'PEN'): string => {
+  return new Intl.NumberFormat(LOCALE, {
     style: 'currency',
     currency,
   }).format(price);
@@ -16,7 +22,7 @@ export const formatDate = (date: string | Date | null | undefined): string => {
     return '-';
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(LOCALE, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -34,7 +40,7 @@ export const formatDateTime = (date: string | Date | null | undefined): string =
     return '-';
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(LOCALE, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

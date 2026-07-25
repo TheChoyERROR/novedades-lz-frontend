@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Input, Button, Card, CardContent } from '@/components/ui';
 
@@ -97,12 +96,6 @@ export function LoginForm() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              ¿No tienes una cuenta?{' '}
-              <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
-                Regístrate
-              </Link>
-            </p>
           </div>
         </CardContent>
       </Card>

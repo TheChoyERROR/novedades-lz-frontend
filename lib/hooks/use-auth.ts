@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { authService } from '@/services/auth.service';
-import { LoginRequest, RegisterRequest } from '@/types';
+import { LoginRequest } from '@/types';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
@@ -88,21 +88,6 @@ export function useAuth() {
     }
   };
 
-  const register = async (userData: RegisterRequest) => {
-    try {
-      setLoading(true);
-      const response = await authService.register(userData);
-      setAuth(response.data.user, response.data.token);
-      toast.success(`Bienvenido, ${response.data.user.fullName?.split(' ')[0]}!`);
-      return { success: true };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al registrarte';
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -115,7 +100,6 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     login,
-    register,
     logout: handleLogout,
   };
 }

@@ -4,38 +4,62 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Card, CardContent } from '@/components/ui';
 import { orderService } from '@/services/order.service';
+import { rememberOrderToken } from '@/lib/orders/order-access';
 import toast from 'react-hot-toast';
+
+interface TrackFormErrors {
+  orderNumber?: string;
+  customerPhone?: string;
+}
 
 export function TrackOrderForm() {
   const router = useRouter();
-  const [orderId, setOrderId] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<TrackFormErrors>({});
+
+  const validate = (): boolean => {
+    const nextErrors: TrackFormErrors = {};
+
+    if (!orderNumber.trim()) {
+      nextErrors.orderNumber = 'Ingresa el numero de pedido';
+    }
+
+    if (!customerPhone.trim()) {
+      nextErrors.customerPhone = 'Ingresa el telefono del pedido';
+    } else if (customerPhone.replace(/\D/g, '').length < 9) {
+      nextErrors.customerPhone = 'Ingresa un telefono valido';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    if (!orderId.trim()) {
-      setError('Ingresa el número de pedido');
-      return;
-    }
-
-    const numericId = parseInt(orderId.trim(), 10);
-    if (isNaN(numericId)) {
-      setError('El número de pedido debe ser numérico');
+    if (!validate()) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await orderService.getOrderById(numericId);
-      router.push(`/orders/${numericId}`);
+      const order = await orderService.trackOrder(orderNumber.trim(), customerPhone.trim());
+      rememberOrderToken(order.id, order.publicToken);
+
+      router.push(
+        order.publicToken
+          ? `/orders/${order.id}?token=${encodeURIComponent(order.publicToken)}`
+          : `/orders/${order.id}`
+      );
     } catch (error) {
       console.error('Error fetching order:', error);
-      toast.error('No se encontró el pedido');
-      setError('No se encontró ningún pedido con ese número');
+      // Mismo mensaje siempre: no confirmamos si el numero existe pero el telefono no coincide.
+      const message = 'No encontramos un pedido con ese numero y telefono';
+      toast.error(message);
+      setErrors({ orderNumber: message });
     } finally {
       setIsLoading(false);
     }
@@ -59,32 +83,37 @@ export function TrackOrderForm() {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">
-              Rastrear Pedido
-            </h2>
+            <h2 className="mt-4 text-xl font-semibold text-gray-900">Rastrear Pedido</h2>
             <p className="mt-2 text-gray-600">
-              Ingresa el número de tu pedido para ver su estado
+              Ingresa el numero de pedido y el telefono con el que lo registraste
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Número de Pedido"
-              value={orderId}
+              label="Numero de Pedido"
+              value={orderNumber}
               onChange={(e) => {
-                setOrderId(e.target.value);
-                setError('');
+                setOrderNumber(e.target.value);
+                setErrors((prev) => ({ ...prev, orderNumber: undefined }));
               }}
-              error={error}
-              placeholder="Ej: 12345"
+              error={errors.orderNumber}
+              placeholder="Ej: ORD-20260725-0001"
             />
 
-            <Button
-              type="submit"
-              className="w-full"
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
+            <Input
+              label="Telefono del pedido"
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => {
+                setCustomerPhone(e.target.value);
+                setErrors((prev) => ({ ...prev, customerPhone: undefined }));
+              }}
+              error={errors.customerPhone}
+              placeholder="987 654 321"
+            />
+
+            <Button type="submit" className="w-full" isLoading={isLoading} disabled={isLoading}>
               Buscar Pedido
             </Button>
           </form>

@@ -11,6 +11,8 @@ interface PaymentProofCardProps {
   order: Order;
   onOrderUpdated?: (order: Order) => void;
   allowUpload?: boolean;
+  /** Credencial del pedido; sin ella el backend rechaza la subida. */
+  accessToken?: string | null;
 }
 
 const yapeRecipientPhone = process.env.NEXT_PUBLIC_YAPE_RECIPIENT_PHONE || '+51 939 662 630';
@@ -19,6 +21,7 @@ export function PaymentProofCard({
   order,
   onOrderUpdated,
   allowUpload = true,
+  accessToken,
 }: PaymentProofCardProps) {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,7 +46,11 @@ export function PaymentProofCard({
     setIsUploading(true);
 
     try {
-      const updatedOrder = await orderService.uploadYapeProof(order.id, proofFile);
+      const updatedOrder = await orderService.uploadYapeProof(
+        order.id,
+        proofFile,
+        accessToken ?? order.publicToken
+      );
       setProofFile(null);
       onOrderUpdated?.(updatedOrder);
       toast.success('Comprobante enviado para revision');

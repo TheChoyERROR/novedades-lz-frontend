@@ -32,12 +32,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface RegisterRequest {
-  password: string;
-  email: string;
-  fullName: string;
-  phone?: string;
-}
 
 export interface AuthResponse {
   success: boolean;
@@ -94,6 +88,8 @@ export interface ProductUpdateRequest {
 export interface Order {
   id: number;
   orderNumber: string;
+  /** Credencial que el cliente necesita para volver a consultar su propio pedido. */
+  publicToken?: string | null;
   customerName: string;
   customerPhone: string;
   customerEmail: string;
