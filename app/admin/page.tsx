@@ -5,17 +5,9 @@ import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth';
 import { Button, Card, CardContent, CardHeader, Spinner } from '@/components/ui';
 import { SiteSettings } from '@/components/admin/site-settings';
-import { productService } from '@/services/product.service';
-import { orderService } from '@/services/order.service';
+import { adminService } from '@/services/admin.service';
 import { formatPrice } from '@/lib/utils/format';
-import { isRevenueStatus } from '@/lib/utils/order-status';
-
-interface DashboardStats {
-  totalProducts: number;
-  totalOrders: number;
-  pendingOrders: number;
-  totalRevenue: number;
-}
+import { DashboardStats } from '@/types';
 
 function AdminDashboardContent() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -24,25 +16,8 @@ function AdminDashboardContent() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [productsRes, ordersRes] = await Promise.all([
-          productService.getAllProducts({ page: 0, size: 1 }),
-          orderService.getAllOrders({ page: 0, size: 100, sortBy: 'createdAt', direction: 'DESC' }),
-        ]);
-
-        const pendingOrders = ordersRes.content.filter(
-          (order) => order.status === 'PENDING'
-        ).length;
-
-        const totalRevenue = ordersRes.content
-          .filter((order) => isRevenueStatus(order.status))
-          .reduce((sum, order) => sum + order.total, 0);
-
-        setStats({
-          totalProducts: productsRes.totalElements,
-          totalOrders: ordersRes.totalElements,
-          pendingOrders,
-          totalRevenue,
-        });
+        // Una sola llamada: el backend calcula los agregados con SUM y COUNT sobre toda la tabla.
+        setStats(await adminService.getDashboardStats());
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -93,7 +68,12 @@ function AdminDashboardContent() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Total Productos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalProducts || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.totalProducts ?? 0}</p>
+                {stats && stats.lowStockProducts > 0 ? (
+                  <p className="mt-0.5 text-xs font-medium text-amber-600">
+                    {stats.lowStockProducts} con stock bajo
+                  </p>
+                ) : null}
               </div>
             </div>
           </CardContent>
@@ -109,7 +89,7 @@ function AdminDashboardContent() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Total Pedidos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders ?? 0}</p>
               </div>
             </div>
           </CardContent>
@@ -124,8 +104,13 @@ function AdminDashboardContent() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-500">Pedidos Pendientes</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.pendingOrders || 0}</p>
+                <p className="text-sm text-gray-500">Comprobantes por revisar</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.ordersAwaitingReview ?? 0}</p>
+                {stats && stats.pendingOrders > 0 ? (
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {stats.pendingOrders} sin comprobante aun
+                  </p>
+                ) : null}
               </div>
             </div>
           </CardContent>
@@ -142,7 +127,10 @@ function AdminDashboardContent() {
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Ingresos Totales</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatPrice(stats?.totalRevenue || 0, 'PEN')}
+                  {formatPrice(stats?.totalRevenue ?? 0, 'PEN')}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {formatPrice(stats?.revenueThisMonth ?? 0, 'PEN')} este mes
                 </p>
               </div>
             </div>
