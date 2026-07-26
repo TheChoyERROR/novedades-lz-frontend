@@ -83,6 +83,19 @@ export interface ProductUpdateRequest {
   removeVideo?: boolean;
 }
 
+// ==================== ADMIN ====================
+
+/** Cifras del panel, calculadas con agregados en la base y no sobre una pagina de resultados. */
+export interface DashboardStats {
+  totalProducts: number;
+  lowStockProducts: number;
+  totalOrders: number;
+  ordersAwaitingReview: number;
+  pendingOrders: number;
+  totalRevenue: number;
+  revenueThisMonth: number;
+}
+
 // ==================== ORDER TYPES ====================
 
 export interface Order {
