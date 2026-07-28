@@ -1,6 +1,7 @@
 import { renderToBuffer } from '@react-pdf/renderer';
 import { getProducts } from '@/lib/api/server';
 import { CatalogDocument } from '@/lib/pdf/catalog-document';
+import { resolveSiteUrl } from '@/lib/site-url';
 import { Product } from '@/types';
 
 /**
@@ -73,15 +74,6 @@ async function loadProductImages(products: Product[]): Promise<Map<number, strin
   return images;
 }
 
-function resolveSiteUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/$/, '');
-  }
-
-  const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
-  return vercelDomain ? `https://${vercelDomain}` : 'http://localhost:3000';
-}
 
 export async function GET() {
   const products = await getProducts({ size: MAX_PRODUCTS, sortBy: 'name', direction: 'ASC' });
