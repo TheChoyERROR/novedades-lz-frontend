@@ -1,12 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth';
 import { Product, ProductCreateRequest } from '@/types';
 import { productService } from '@/services/product.service';
 import { Badge, Button, Card, CardContent, Input, Modal, MultiImageUpload, Spinner } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
+import { ListToolbar, PaginationBar } from '@/components/ui/list-controls';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import toast from 'react-hot-toast';
 
 function AdminProductsContent() {
@@ -14,6 +16,13 @@ function AdminProductsContent() {
   const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [search, setSearch] = useState('');
+  // Se separa lo escrito de lo aplicado para no consultar al backend en cada tecla.
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -32,21 +41,30 @@ function AdminProductsContent() {
     category: '',
   });
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const response = await productService.getAllProducts({ page: 0, size: 100 });
+      // Antes traia 100 de golpe y sin paginar: al pasar de ese numero, los productos siguientes
+      // simplemente no aparecian y nada lo indicaba.
+      const response = await productService.getAllProducts({
+        page,
+        size: pageSize,
+        search: appliedSearch || undefined,
+      });
       setProducts(response.content);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Error al cargar productos');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize, appliedSearch]);
 
   useEffect(() => {
     void fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   const openCreateModal = () => {
     setEditingProduct(null);
@@ -218,6 +236,21 @@ function AdminProductsContent() {
         </div>
       </div>
 
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        onSubmit={() => {
+          setPage(0);
+          setAppliedSearch(search.trim());
+        }}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPage(0);
+          setPageSize(size);
+        }}
+        placeholder="Buscar por nombre o descripcion..."
+      />
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -310,6 +343,14 @@ function AdminProductsContent() {
           </div>
         </CardContent>
       </Card>
+
+      <PaginationBar
+        page={page}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        onPageChange={setPage}
+        itemLabel="productos"
+      />
 
       <Modal
         isOpen={isModalOpen}

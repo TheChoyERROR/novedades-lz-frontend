@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CatalogSearch, ProductGrid } from '@/components/products';
 import { getCatalogPage, getCategories } from '@/lib/api/server';
+import { normalizePageSize, PAGE_SIZE_OPTIONS, toPageIndex } from '@/lib/pagination';
 
 /**
  * El catalogo se renderiza en el servidor.
@@ -15,8 +16,6 @@ import { getCatalogPage, getCategories } from '@/lib/api/server';
  */
 export const revalidate = 300;
 
-const PAGE_SIZE = 12;
-
 export const metadata: Metadata = {
   title: 'Productos | Novedades LZ',
   description:
@@ -25,18 +24,19 @@ export const metadata: Metadata = {
 };
 
 interface CatalogPageProps {
-  searchParams: Promise<{ q?: string; categoria?: string; pagina?: string }>;
+  searchParams: Promise<{ q?: string; categoria?: string; pagina?: string; mostrar?: string }>;
 }
 
 export default async function ProductsPage({ searchParams }: CatalogPageProps) {
-  const { q, categoria, pagina } = await searchParams;
+  const { q, categoria, pagina, mostrar } = await searchParams;
 
   const search = q?.trim() || undefined;
   const category = categoria?.trim() || undefined;
-  const page = Math.max(0, Number(pagina ?? '1') - 1) || 0;
+  const page = toPageIndex(pagina);
+  const pageSize = normalizePageSize(mostrar);
 
   const [catalog, categories] = await Promise.all([
-    getCatalogPage({ page, size: PAGE_SIZE, search, category }),
+    getCatalogPage({ page, size: pageSize, search, category }),
     getCategories(),
   ]);
 
@@ -62,8 +62,73 @@ export default async function ProductsPage({ searchParams }: CatalogPageProps) {
           totalPages={catalog.totalPages}
           search={search}
           category={category}
+          pageSize={pageSize}
         />
       ) : null}
+
+      {catalog.totalElements > PAGE_SIZE_OPTIONS[0] ? (
+        <PageSizePicker
+          current={pageSize}
+          search={search}
+          category={category}
+          total={catalog.totalElements}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function buildCatalogHref({
+  search,
+  category,
+  page = 0,
+  pageSize,
+}: {
+  search?: string;
+  category?: string;
+  page?: number;
+  pageSize?: number;
+}): string {
+  const params = new URLSearchParams();
+  if (search) params.set('q', search);
+  if (category) params.set('categoria', category);
+  if (page > 0) params.set('pagina', String(page + 1));
+  if (pageSize && pageSize !== PAGE_SIZE_OPTIONS[0]) params.set('mostrar', String(pageSize));
+
+  const query = params.toString();
+  return query ? `/products?${query}` : '/products';
+}
+
+/** Va al pie, junto a la paginacion: arriba recrearia el muro de filtros que acabamos de quitar. */
+function PageSizePicker({
+  current,
+  search,
+  category,
+  total,
+}: {
+  current: number;
+  search?: string;
+  category?: string;
+  total: number;
+}) {
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+      <span>Mostrar por pagina:</span>
+      {PAGE_SIZE_OPTIONS.filter((size) => size <= total || size === PAGE_SIZE_OPTIONS[0]).map(
+        (size) => (
+          <Link
+            key={size}
+            href={buildCatalogHref({ search, category, pageSize: size })}
+            className={`rounded-full border px-3 py-1 transition-colors ${
+              size === current
+                ? 'border-primary-600 bg-primary-600 text-white'
+                : 'border-border hover:border-primary-300'
+            }`}
+          >
+            {size}
+          </Link>
+        )
+      )}
     </div>
   );
 }
@@ -73,21 +138,15 @@ function Pagination({
   totalPages,
   search,
   category,
+  pageSize,
 }: {
   currentPage: number;
   totalPages: number;
   search?: string;
   category?: string;
+  pageSize: number;
 }) {
-  const href = (page: number) => {
-    const params = new URLSearchParams();
-    if (search) params.set('q', search);
-    if (category) params.set('categoria', category);
-    if (page > 0) params.set('pagina', String(page + 1));
-
-    const query = params.toString();
-    return query ? `/products?${query}` : '/products';
-  };
+  const href = (page: number) => buildCatalogHref({ search, category, page, pageSize });
 
   return (
     <nav className="mt-10 flex items-center justify-center gap-3" aria-label="Paginacion">
