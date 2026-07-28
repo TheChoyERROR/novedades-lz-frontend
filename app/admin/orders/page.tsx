@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth';
 import { Order, OrderStatus } from '@/types';
 import { orderService } from '@/services/order.service';
-import { Badge, Button, Card, CardContent, Modal, Select, Spinner } from '@/components/ui';
+import { Badge, Button, Card, CardContent, Modal, Spinner } from '@/components/ui';
 import { formatDateTime, formatPrice } from '@/lib/utils/format';
 import { adminOrderFilterOptions, orderStatusConfig } from '@/lib/utils/order-status';
+import { ListToolbar, PaginationBar } from '@/components/ui/list-controls';
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination';
 import { fulfillmentLabel, isPickupOrder } from '@/lib/orders/fulfillment';
 import toast from 'react-hot-toast';
 
@@ -16,26 +18,39 @@ function AdminOrdersContent() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [reviewOperationNumber, setReviewOperationNumber] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
   const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
     try {
+      // El filtro por estado se resuelve en el backend junto con la busqueda; antes se traian 100
+      // pedidos y se filtraban en memoria, asi que a partir del pedido 101 el panel mentia.
       const response = await orderService.getAllOrders({
-        page: 0,
-        size: 100,
+        page,
+        size: pageSize,
+        status: (filterStatus || undefined) as OrderStatus | undefined,
+        customerPhone: appliedSearch || undefined,
         sortBy: 'createdAt',
         direction: 'DESC',
       });
       setOrders(response.content);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Error al cargar pedidos');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, pageSize, filterStatus, appliedSearch]);
 
   useEffect(() => {
     void fetchOrders();
@@ -46,9 +61,7 @@ function AdminOrdersContent() {
     [orders]
   );
 
-  const filteredOrders = filterStatus
-    ? orders.filter((order) => order.status === filterStatus)
-    : orders;
+
 
   const openOrderDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -155,14 +168,38 @@ function AdminOrdersContent() {
               : 'No hay comprobantes pendientes por revisar.'}
           </p>
         </div>
-        <div className="w-full sm:w-64">
-          <Select
-            options={adminOrderFilterOptions}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          />
-        </div>
       </div>
+
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        onSubmit={() => {
+          setPage(0);
+          setAppliedSearch(search.trim());
+        }}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPage(0);
+          setPageSize(size);
+        }}
+        placeholder="Buscar por pedido, nombre o telefono..."
+      >
+        <select
+          value={filterStatus}
+          onChange={(event) => {
+            setPage(0);
+            setFilterStatus(event.target.value);
+          }}
+          aria-label="Filtrar por estado"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          {adminOrderFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </ListToolbar>
 
       <Card>
         <CardContent className="p-0">
@@ -188,7 +225,7 @@ function AdminOrdersContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <tr
                     key={order.id}
                     className={order.status === OrderStatus.PAYMENT_REVIEW ? 'bg-blue-50/60' : 'hover:bg-gray-50'}
@@ -223,6 +260,14 @@ function AdminOrdersContent() {
           </div>
         </CardContent>
       </Card>
+
+      <PaginationBar
+        page={page}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        onPageChange={setPage}
+        itemLabel="pedidos"
+      />
 
       <Modal
         isOpen={isModalOpen}
