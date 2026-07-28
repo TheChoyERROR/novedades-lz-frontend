@@ -5,6 +5,7 @@ import { ProductDetail, ProductGrid } from '@/components/products';
 import { getProductById, getRelatedProducts } from '@/lib/api/server';
 import { formatPrice } from '@/lib/utils/format';
 import { getOpenGraphImageUrl, OG_IMAGE_SIZE } from '@/lib/utils/og-image';
+import { buildProductUrl } from '@/lib/site-url';
 
 /**
  * Esta pagina se renderiza en el servidor y se regenera cada pocos minutos.
@@ -89,7 +90,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </ol>
       </nav>
 
-      <ProductDetail product={product} />
+      <ProductDetail product={product} productUrl={buildProductUrl(product.id)} />
 
       {relatedProducts.length > 0 && (
         <section className="mt-16">

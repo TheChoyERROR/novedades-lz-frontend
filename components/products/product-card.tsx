@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { Card, CardContent, Button } from '@/components/ui';
 import { formatPrice } from '@/lib/utils/format';
 import { useCartStore } from '@/stores/cart-store';
+import { getAvailability } from '@/lib/products/product-messaging';
 import { useSiteStore } from '@/stores/site-store';
 import { ProductImageWatermark } from '@/components/products/product-image-watermark';
 import {
@@ -22,7 +23,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addItem, getItem } = useCartStore();
   const { campaign } = useSiteStore();
   const cartItem = getItem(product.id);
-  const isOutOfStock = product.trackInventory && product.stock === 0;
+  const availability = getAvailability(product);
+  const isOutOfStock = availability.isOutOfStock;
   const displayImageUrl = getProtectedCloudinaryImageUrl(product.imageUrl, 'card');
   const showOverlayFallback = shouldUseOverlayWatermarkFallback(product.imageUrl);
   const showCampaignPromo = campaign.enabled && campaign.cardBadge;
@@ -126,8 +128,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <span className="text-lg font-bold text-primary-600 sm:text-xl">
             {formatPrice(product.price, 'PEN')}
           </span>
-          <span className="text-xs text-muted-foreground sm:text-sm">
-            {product.trackInventory ? (isOutOfStock ? 'Agotado' : 'Disponible') : 'Disponible'}
+          <span
+            className={`text-xs sm:text-sm ${
+              availability.tone === 'warning' ? 'font-medium text-amber-600' : 'text-muted-foreground'
+            }`}
+          >
+            {availability.label}
           </span>
         </div>
 
