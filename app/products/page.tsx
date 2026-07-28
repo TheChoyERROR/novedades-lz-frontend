@@ -1,301 +1,117 @@
-'use client';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { CatalogSearch, ProductGrid } from '@/components/products';
+import { getCatalogPage, getCategories } from '@/lib/api/server';
 
-import { useEffect, useState } from 'react';
-import { Product } from '@/types';
-import { productService } from '@/services/product.service';
-import { ProductFilters, ProductGrid } from '@/components/products';
-import { BackendStatusNotice, Button } from '@/components/ui';
-import { useSiteStore } from '@/stores/site-store';
-import {
-  ApiAvailabilityState,
-  BACKEND_RETRY_DELAY_MS,
-  isBackendUnavailableError,
-} from '@/lib/api/client';
+/**
+ * El catalogo se renderiza en el servidor.
+ *
+ * <p>Antes era un componente de cliente: el HTML llegaba vacio, el navegador pedia los productos y
+ * mientras tanto la clienta veia "Cargando productos...". Como la portada redirige aqui, eso era
+ * literalmente lo primero que se veia al entrar a la tienda.
+ *
+ * <p>Ahora el HTML llega con los productos puestos, y buscar o filtrar es una navegacion normal
+ * con parametros en la URL: funciona sin JavaScript y cada busqueda queda como enlace compartible.
+ */
+export const revalidate = 300;
 
-interface FilterValues {
-  category: string;
-  sortBy: string;
-  direction: string;
+const PAGE_SIZE = 12;
+
+export const metadata: Metadata = {
+  title: 'Productos | Novedades LZ',
+  description:
+    'Mira todo el catalogo de Novedades LZ: novedades, accesorios y regalos con envio a todo el pais.',
+  alternates: { canonical: '/products' },
+};
+
+interface CatalogPageProps {
+  searchParams: Promise<{ q?: string; categoria?: string; pagina?: string }>;
 }
 
-export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadState, setLoadState] = useState<ApiAvailabilityState>('loading');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [retryTick, setRetryTick] = useState(0);
-  const [categoryRetryTick, setCategoryRetryTick] = useState(0);
-  const [warmupAttempts, setWarmupAttempts] = useState(0);
-  const [filters, setFilters] = useState<FilterValues>({
-    category: '',
-    sortBy: 'createdAt',
-    direction: 'DESC',
-  });
-  const [searchQuery, setSearchQuery] = useState('');
-  const { campaign } = useSiteStore();
+export default async function ProductsPage({ searchParams }: CatalogPageProps) {
+  const { q, categoria, pagina } = await searchParams;
 
-  useEffect(() => {
-    let isCancelled = false;
-    let retryTimeout: number | undefined;
+  const search = q?.trim() || undefined;
+  const category = categoria?.trim() || undefined;
+  const page = Math.max(0, Number(pagina ?? '1') - 1) || 0;
 
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setLoadState((current) => (current === 'warming_up' ? current : 'loading'));
-
-      try {
-        const params = {
-          page: currentPage,
-          size: 12,
-          sortBy: filters.sortBy,
-          direction: filters.direction as 'ASC' | 'DESC',
-        };
-
-        const response = searchQuery
-          ? await productService.searchProducts({ query: searchQuery, ...params })
-          : filters.category
-          ? await productService.getProductsByCategory(filters.category, params)
-          : await productService.getAllProducts(params);
-
-        if (isCancelled) {
-          return;
-        }
-
-        setProducts(response.content || []);
-        setTotalPages(response.totalPages || 0);
-        setLoadState('ready');
-        setWarmupAttempts(0);
-      } catch (error) {
-        if (isCancelled) {
-          return;
-        }
-
-        console.error('Error fetching products:', error);
-
-        if (isBackendUnavailableError(error)) {
-          setLoadState('warming_up');
-          setWarmupAttempts((current) => current + 1);
-          retryTimeout = window.setTimeout(() => {
-            setRetryTick((current) => current + 1);
-          }, BACKEND_RETRY_DELAY_MS);
-          return;
-        }
-
-        setLoadState('error');
-        setProducts([]);
-        setTotalPages(0);
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchProducts();
-
-    return () => {
-      isCancelled = true;
-
-      if (retryTimeout) {
-        window.clearTimeout(retryTimeout);
-      }
-    };
-  }, [currentPage, filters.category, filters.direction, filters.sortBy, retryTick, searchQuery]);
-
-  useEffect(() => {
-    let isCancelled = false;
-    let retryTimeout: number | undefined;
-
-    const fetchCategories = async () => {
-      try {
-        const nextCategories = await productService.getCategories();
-        if (isCancelled) {
-          return;
-        }
-
-        setCategories(nextCategories);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-
-        if (isBackendUnavailableError(error)) {
-          retryTimeout = window.setTimeout(() => {
-            setCategoryRetryTick((current) => current + 1);
-          }, BACKEND_RETRY_DELAY_MS);
-          return;
-        }
-
-        if (!isCancelled) {
-          setCategories([]);
-        }
-      }
-    };
-
-    void fetchCategories();
-
-    return () => {
-      isCancelled = true;
-
-      if (retryTimeout) {
-        window.clearTimeout(retryTimeout);
-      }
-    };
-  }, [categoryRetryTick]);
-
-  const handleFilterChange = (newFilters: FilterValues) => {
-    setFilters(newFilters);
-    setCurrentPage(0);
-    setLoadState('loading');
-    setWarmupAttempts(0);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(0);
-    setLoadState('loading');
-    setWarmupAttempts(0);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    setLoadState('loading');
-    setWarmupAttempts(0);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleRetry = () => {
-    setWarmupAttempts(0);
-    setLoadState('loading');
-    setRetryTick((current) => current + 1);
-  };
-
-  const isBackendWarmingUp = loadState === 'warming_up';
-  const isGridBusy = isLoading || isBackendWarmingUp;
-  const warmupTitle =
-    warmupAttempts > 1 ? 'El catalogo ya casi esta disponible' : 'Estamos conectando con el catalogo';
+  const [catalog, categories] = await Promise.all([
+    getCatalogPage({ page, size: PAGE_SIZE, search, category }),
+    getCategories(),
+  ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Nuestros Productos</h1>
-        <p className="mt-2 text-gray-600">
-          {campaign.enabled
-            ? `${campaign.name}: ${campaign.discountLabel} en todos los productos`
-            : 'Explora nuestra seleccion de productos de calidad'}
-        </p>
-      </div>
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <h1 className="mb-4 text-2xl font-bold text-foreground sm:text-3xl">Nuestros Productos</h1>
 
-      {campaign.enabled ? (
-        <div className="mb-8 overflow-hidden rounded-2xl border border-primary-200 bg-primary-50 shadow-lg">
-          <div className="relative px-6 py-7 sm:px-8">
-            <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <span className="inline-flex rounded-full bg-primary-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
-                  {campaign.name}
-                </span>
-                <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
-                  {campaign.discountLabel} {campaign.headline ? `- ${campaign.headline}` : ''}
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                  {campaign.catalogIntro}
-                </p>
-              </div>
-              {campaign.whatsappUrl && (
-                <a
-                  href={campaign.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-lg border border-primary-600 bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700"
-                >
-                  Consultar promo
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="mb-8">
-        <ProductFilters
-          categories={categories}
-          onFilterChange={handleFilterChange}
-          onSearch={handleSearch}
-        />
-      </div>
-
-      {isBackendWarmingUp ? (
-        <BackendStatusNotice
-          className="mb-6"
-          title={warmupTitle}
-          message="Si el backend estaba inactivo, puede tardar un poco en volver. Reintentamos automaticamente mientras esperas."
-          onRetry={handleRetry}
-        />
-      ) : null}
-
-      {loadState === 'error' ? (
-        <BackendStatusNotice
-          variant="error"
-          className="mb-6"
-          title="No pudimos actualizar el catalogo"
-          message="Puedes reintentar ahora o volver en unos segundos. Cuando el backend responda, la lista cargara normal."
-          onRetry={handleRetry}
-        />
-      ) : null}
+      <CatalogSearch search={search} categories={categories} activeCategory={category} />
 
       <ProductGrid
-        products={products}
-        isLoading={isGridBusy}
-        emptyMessage={loadState === 'error' ? 'No pudimos cargar el catalogo' : undefined}
+        products={catalog.products}
+        emptyMessage={search ? `No encontramos "${search}"` : 'No hay productos disponibles'}
         emptyDescription={
-          loadState === 'error'
-            ? 'Prueba otra vez en unos segundos o usa el boton de reintentar.'
-            : undefined
-        }
-        loadingMessage={
-          isBackendWarmingUp ? 'Despertando productos y categorias...' : 'Cargando productos...'
-        }
-        loadingDescription={
-          isBackendWarmingUp
-            ? 'Mostraremos los productos apenas el backend quede listo, sin obligarte a refrescar.'
-            : 'Esto suele tardar solo unos segundos.'
+          search
+            ? 'Prueba con otra palabra o mira todo el catalogo.'
+            : 'Vuelve en un momento, estamos reponiendo.'
         }
       />
 
-      {totalPages > 1 && (
-        <div className="mt-12 flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            Anterior
-          </Button>
-
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Button
-              key={i}
-              variant={currentPage === i ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handlePageChange(i)}
-            >
-              {i + 1}
-            </Button>
-          )).slice(
-            Math.max(0, currentPage - 2),
-            Math.min(totalPages, currentPage + 3)
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages - 1}
-          >
-            Siguiente
-          </Button>
-        </div>
-      )}
+      {catalog.totalPages > 1 ? (
+        <Pagination
+          currentPage={catalog.page}
+          totalPages={catalog.totalPages}
+          search={search}
+          category={category}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function Pagination({
+  currentPage,
+  totalPages,
+  search,
+  category,
+}: {
+  currentPage: number;
+  totalPages: number;
+  search?: string;
+  category?: string;
+}) {
+  const href = (page: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (category) params.set('categoria', category);
+    if (page > 0) params.set('pagina', String(page + 1));
+
+    const query = params.toString();
+    return query ? `/products?${query}` : '/products';
+  };
+
+  return (
+    <nav className="mt-10 flex items-center justify-center gap-3" aria-label="Paginacion">
+      {currentPage > 0 ? (
+        <Link
+          href={href(currentPage - 1)}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-primary-300"
+        >
+          Anterior
+        </Link>
+      ) : null}
+
+      <span className="text-sm text-muted-foreground">
+        Pagina {currentPage + 1} de {totalPages}
+      </span>
+
+      {currentPage + 1 < totalPages ? (
+        <Link
+          href={href(currentPage + 1)}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-primary-300"
+        >
+          Siguiente
+        </Link>
+      ) : null}
+    </nav>
   );
 }

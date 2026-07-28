@@ -81,26 +81,66 @@ export async function getProductById(id: number): Promise<Product | null> {
   return fetchFromApi<Product>(`/products/${id}`, CATALOG_REVALIDATE_SECONDS);
 }
 
-export async function getProducts(params: {
+export interface CatalogQuery {
   page?: number;
   size?: number;
   category?: string;
-  sortBy?: string;
-  direction?: 'ASC' | 'DESC';
-}): Promise<Product[]> {
+  search?: string;
+}
+
+export interface CatalogPage {
+  products: Product[];
+  page: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+/**
+ * Una pagina del catalogo. Devuelve el total de paginas porque el listado se pagina con enlaces
+ * renderizados en el servidor, no con estado en el navegador.
+ */
+export async function getCatalogPage(params: CatalogQuery): Promise<CatalogPage> {
   const query = new URLSearchParams();
   query.set('page', String(params.page ?? 0));
   query.set('size', String(params.size ?? 12));
-  if (params.sortBy) query.set('sortBy', params.sortBy);
-  if (params.direction) query.set('direction', params.direction);
+  if (params.search) query.set('search', params.search);
 
   const path = params.category
     ? `/products/category/${encodeURIComponent(params.category)}?${query}`
     : `/products?${query}`;
 
+  const result = await fetchFromApi<PageResponse<Product>>(path, CATALOG_REVALIDATE_SECONDS);
+
+  return {
+    products: result?.content ?? [],
+    page: result?.number ?? 0,
+    totalPages: result?.totalPages ?? 0,
+    totalElements: result?.totalElements ?? 0,
+  };
+}
+
+/** Nombres de categoria presentes en el catalogo, para ofrecer el filtro solo si hay mas de una. */
+export async function getCategories(): Promise<string[]> {
   try {
-    const page = await fetchFromApi<PageResponse<Product>>(path, CATALOG_REVALIDATE_SECONDS);
-    return page?.content ?? [];
+    const page = await getCatalogPage({ size: 100 });
+    const names = page.products
+      .map((product) => product.category)
+      .filter((category): category is string => Boolean(category?.trim()));
+
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'es'));
+  } catch {
+    return [];
+  }
+}
+
+export async function getProducts(params: {
+  page?: number;
+  size?: number;
+  category?: string;
+  search?: string;
+}): Promise<Product[]> {
+  try {
+    return (await getCatalogPage(params)).products;
   } catch {
     // Los listados secundarios (relacionados, destacados) no deben tumbar la pagina entera.
     return [];

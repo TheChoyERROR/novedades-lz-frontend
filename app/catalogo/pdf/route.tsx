@@ -76,7 +76,7 @@ async function loadProductImages(products: Product[]): Promise<Map<number, strin
 
 
 export async function GET() {
-  const products = await getProducts({ size: MAX_PRODUCTS, sortBy: 'name', direction: 'ASC' });
+  const products = await getProducts({ size: MAX_PRODUCTS });
 
   if (products.length === 0) {
     return new Response('No hay productos para exportar', { status: 404 });
